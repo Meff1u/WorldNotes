@@ -1,0 +1,45 @@
+export default {
+    storageKey: "worldnotes",
+    dataVersion: 1,
+    countriesUrl: `${import.meta.env.BASE_URL}data/countries.json`,
+    view: {
+        initial: { lat: 30, lng: 15, altitude: 2 },
+        minDistance: 110,
+        maxDistance: 650,
+        zoomStep: 0.7,
+        transition: 900,
+        smallArea: 0.0004,
+    },
+    altitude: {
+        base: 0.003,
+        border: 0.0036,
+        selected: 0.02,
+    },
+    palette: [
+        "#ef4444", "#f97316", "#f59e0b", "#eab308",
+        "#84cc16", "#22c55e", "#14b8a6", "#06b6d4",
+        "#3b82f6", "#6366f1", "#a855f7", "#ec4899",
+    ],
+    themes: {
+        dark: {
+            background: "#080c14",
+            ocean: "#0f1a2c",
+            land: "#2b3547",
+            stroke: "#aabee1",
+            strokeOpacity: 0.25,
+            atmosphere: "#3f74c4",
+            accent: "#6aa6ff",
+            sideShade: 0.35,
+        },
+        light: {
+            background: "#e9eef5",
+            ocean: "#bcd3ec",
+            land: "#fbfcfd",
+            stroke: "#28405f",
+            strokeOpacity: 0.3,
+            atmosphere: "#8fbcef",
+            accent: "#1d5fe0",
+            sideShade: 0.1,
+        },
+    },
+};
