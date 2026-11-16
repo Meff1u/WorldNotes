@@ -15,6 +15,16 @@ export const execute = async (app) => {
         return String(text).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[char]);
     };
 
+    // Strips diacritics so "aland" finds "Åland"; letters like "ł" or "ø" don't decompose in Unicode and need a map
+    app.normalizeText = function (text) {
+        const letters = { ł: "l", ø: "o", đ: "d", ħ: "h", ı: "i", æ: "ae", œ: "oe", ß: "ss", þ: "th" };
+        return String(text)
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[̀-ͯ]/g, "")
+            .replace(/[łøđħıæœßþ]/g, (char) => letters[char]);
+    };
+
     app.isHexColor = function (value) {
         return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
     };

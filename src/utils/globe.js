@@ -26,7 +26,8 @@ export const execute = async (app) => {
                     return { coordinates, polygon, bounds: geoBounds(polygon) };
                 });
 
-                return { name: country.properties.name, geometry, parts, view: app.getCountryView(geometry, parts) };
+                const name = country.properties.name;
+                return { name, searchName: app.normalizeText(name), geometry, parts, view: app.getCountryView(geometry, parts) };
             })
             .sort((a, b) => a.name.localeCompare(b.name));
     };

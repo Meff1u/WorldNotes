@@ -61,12 +61,12 @@ export const execute = async (app) => {
         };
 
         input.addEventListener("input", () => {
-            const query = input.value.trim().toLowerCase();
+            const query = app.normalizeText(input.value.trim());
             active = 0;
             results = query && app.countries
                 ? app.countries
-                    .filter((country) => country.name.toLowerCase().includes(query))
-                    .sort((a, b) => a.name.toLowerCase().indexOf(query) - b.name.toLowerCase().indexOf(query))
+                    .filter((country) => country.searchName.includes(query))
+                    .sort((a, b) => a.searchName.indexOf(query) - b.searchName.indexOf(query))
                     .slice(0, 8)
                 : [];
             render();

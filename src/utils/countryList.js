@@ -60,10 +60,10 @@ export const execute = async (app) => {
     };
 
     app.renderCountryList = function () {
-        const query = elements["list-search"].value.trim().toLowerCase();
+        const query = app.normalizeText(elements["list-search"].value.trim());
         const matching = app.countries.filter((country) => {
-            const entry = app.getEntry(country.name);
-            return !query || country.name.toLowerCase().includes(query) || entry?.note.toLowerCase().includes(query);
+            const note = app.getEntry(country.name)?.note;
+            return !query || country.searchName.includes(query) || (note && app.normalizeText(note).includes(query));
         });
 
         for (const chip of elements["list-filters"].querySelectorAll(".chip")) {
