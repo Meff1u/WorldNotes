@@ -1,24 +1,16 @@
 export const execute = async (app) => {
     app.bindControls = function () {
         const { zoomStep } = app.constants.view;
-        const fileInput = document.getElementById("import-file");
 
-        document.getElementById("theme").addEventListener("click", () => app.toggleTheme());
-        document.getElementById("export").addEventListener("click", () => app.exportData());
-        document.getElementById("import").addEventListener("click", () => fileInput.click());
         document.getElementById("zoom-in").addEventListener("click", () => app.zoomBy(zoomStep));
         document.getElementById("zoom-out").addEventListener("click", () => app.zoomBy(1 / zoomStep));
         document.getElementById("zoom-reset").addEventListener("click", () => app.resetView());
 
-        fileInput.addEventListener("change", async () => {
-            const [file] = fileInput.files;
-            if (file) await app.importData(file);
-            fileInput.value = "";
-        });
-
         document.addEventListener("keydown", (event) => {
             const typing = ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName);
 
+            if (document.getElementById("reset-dialog").open) return;
+            if (event.key === "Escape" && app.isSettingsOpen()) return app.closeSettings(true);
             if (event.key === "Escape" && !typing) app.clearSelection();
             if (event.key === "/" && !typing) {
                 event.preventDefault();
@@ -29,6 +21,7 @@ export const execute = async (app) => {
         window.addEventListener("beforeunload", () => app.flushNote());
 
         app.bindSearch();
+        app.bindSettings();
     };
 
     app.bindSearch = function () {

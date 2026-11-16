@@ -12,6 +12,7 @@ Interactive 3D globe for keeping notes about countries. Live at https://meff1u.g
 - **Search** to find a country by name and fly the camera to it
 - **Import and export** of all notes, colors and settings as a JSON file
 - **Light and dark theme**, defaulting to your system preference
+- **Factory reset** to wipe all notes and settings, with a confirmation step
 - **Local storage**: everything is kept in your browser, no account or server needed
 - **Mobile friendly**: touch controls and a bottom sheet panel on small screens
 
@@ -44,14 +45,22 @@ The counter at the bottom of the screen shows how many notes and colored countri
 | `/` | Focus the search box |
 | `↑` `↓` | Move through search results |
 | `Enter` | Select the highlighted search result |
-| `Esc` | Close the panel or clear the search |
+| `Esc` | Close the settings menu, the panel or clear the search |
+
+### Settings
+
+The gear icon in the top right corner opens the settings menu:
+
+- **Theme** switches between light and dark
+- **Import notes** and **Export notes** (see below)
+- **Factory reset** deletes all notes, colors and settings. A confirmation window shows how much will be removed and lets you export a backup first. This cannot be undone
 
 ### Backup and transfer
 
-Notes live in your browser's local storage, so they are tied to one browser on one device. Use the buttons in the top bar to move them elsewhere:
+Notes live in your browser's local storage, so they are tied to one browser on one device. Use the settings menu to move them elsewhere:
 
-- **Export** (↑ icon) downloads `worldnotes-YYYY-MM-DD.json` with all notes, colors and the theme
-- **Import** (↓ icon) loads such a file. If you already have notes, you'll be asked before they are replaced
+- **Export notes** downloads `worldnotes-YYYY-MM-DD.json` with all notes, colors and the theme
+- **Import notes** loads such a file. If you already have notes, you'll be asked before they are replaced
 
 The file format:
 

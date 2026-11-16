@@ -98,6 +98,8 @@ svg {
 }
 
 .topbar,
+.settings-toggle,
+.settings-menu,
 .zoom-controls,
 .stats,
 .panel,
@@ -216,11 +218,6 @@ svg {
     flex-shrink: 0;
 }
 
-.actions {
-    display: flex;
-    gap: 2px;
-}
-
 .icon-button {
     display: grid;
     place-items: center;
@@ -246,6 +243,201 @@ svg {
 
 :root[data-theme="light"] .icon-moon {
     display: block;
+}
+
+.settings {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 30;
+}
+
+.settings-toggle {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius);
+    color: var(--text);
+}
+
+.settings-toggle svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.4s var(--ease);
+}
+
+.settings-toggle[aria-expanded="true"] {
+    color: var(--accent);
+}
+
+.settings-toggle[aria-expanded="true"] svg {
+    transform: rotate(60deg);
+}
+
+.settings-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 230px;
+    padding: 5px;
+    border-radius: var(--radius);
+    background: var(--surface-solid);
+    transform-origin: top right;
+    animation: menu-in 0.18s var(--ease);
+}
+
+.settings-menu[hidden] {
+    display: none;
+}
+
+@keyframes menu-in {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-4px);
+    }
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: var(--radius-small);
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.menu-item svg {
+    width: 17px;
+    height: 17px;
+    color: var(--text-muted);
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+    background: var(--surface-hover);
+    outline: none;
+}
+
+.menu-item.danger,
+.menu-item.danger svg {
+    color: var(--danger);
+}
+
+.menu-item.danger:hover,
+.menu-item.danger:focus-visible {
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.menu-value {
+    margin-left: auto;
+    color: var(--text-muted);
+    font-size: 12.5px;
+}
+
+.menu-separator {
+    height: 1px;
+    margin: 5px 6px;
+    background: var(--border);
+}
+
+.dialog {
+    width: min(420px, calc(100vw - 32px));
+    margin: auto;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--surface-solid);
+    color: var(--text);
+    box-shadow: var(--shadow);
+}
+
+.dialog[open] {
+    animation: dialog-in 0.22s var(--ease);
+}
+
+.dialog::backdrop {
+    background: rgba(4, 8, 16, 0.55);
+    backdrop-filter: blur(3px);
+}
+
+@keyframes dialog-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+}
+
+.dialog-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--danger) 14%, transparent);
+    color: var(--danger);
+}
+
+.dialog-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.dialog h2 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+}
+
+.dialog p {
+    color: var(--text-muted);
+    line-height: 1.55;
+}
+
+.dialog p + p {
+    margin-top: 8px;
+}
+
+.dialog strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 22px;
+}
+
+.dialog-spacer {
+    flex: 1;
+}
+
+.button {
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+    background: var(--input-bg);
+    font-weight: 550;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.button:not(:disabled):hover {
+    background: var(--surface-hover);
+}
+
+.button-danger {
+    border-color: transparent;
+    background: var(--danger);
+    color: #ffffff;
+}
+
+.button-danger:not(:disabled):hover {
+    background: color-mix(in srgb, var(--danger) 85%, #000000);
 }
 
 .zoom-controls {
@@ -276,7 +468,7 @@ svg {
 
 .panel {
     position: fixed;
-    top: 16px;
+    top: 76px;
     right: 16px;
     bottom: 16px;
     width: var(--panel-width);
@@ -557,9 +749,26 @@ textarea::placeholder {
     .topbar {
         top: 12px;
         left: 12px;
-        right: 12px;
+        right: 68px;
         max-width: none;
         padding-left: 12px;
+    }
+
+    .settings {
+        top: 12px;
+        right: 12px;
+    }
+
+    .dialog-spacer {
+        display: none;
+    }
+
+    .dialog-actions .button {
+        flex: 1;
+    }
+
+    #reset-confirm {
+        flex-basis: 100%;
     }
 
     .brand span {
@@ -578,6 +787,7 @@ textarea::placeholder {
     .stats {
         display: none;
     }
+
     .panel {
         top: auto;
         left: 12px;
