@@ -1,6 +1,5 @@
 import Globe from "globe.gl";
-import ConicPolygonGeometry from "three-conic-polygon-geometry";
-import { BufferAttribute, BufferGeometry, Color, DoubleSide, Group, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial } from "three";
+import { BufferAttribute, BufferGeometry, Color, DoubleSide, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial } from "three";
 import { feature } from "topojson-client";
 import { geoArea, geoBounds, geoCentroid, geoContains } from "d3-geo";
 
@@ -10,30 +9,6 @@ export const execute = async (app) => {
 
     app.hovered = null;
     app.selected = null;
-
-    app.toCartesian = function (lat, lng, distance) {
-        const phi = ((90 - lat) * Math.PI) / 180;
-        const theta = ((90 - lng) * Math.PI) / 180;
-        return [distance * Math.sin(phi) * Math.cos(theta), distance * Math.cos(phi), distance * Math.sin(phi) * Math.sin(theta)];
-    };
-
-    // Long straight edges (e.g. the 49th parallel) would otherwise render as chords cutting below the globe surface
-    app.densifyRing = function (ring, maxStep) {
-        const result = [ring[0]];
-
-        for (let i = 1; i < ring.length; i++) {
-            const [lng0, lat0] = ring[i - 1];
-            const [lng1, lat1] = ring[i];
-            const wraps = Math.abs(lng1 - lng0) > 180;
-            const steps = wraps ? 1 : Math.ceil(Math.max(Math.abs(lng1 - lng0), Math.abs(lat1 - lat0)) / maxStep);
-
-            for (let step = 1; step <= steps; step++) {
-                result.push([lng0 + ((lng1 - lng0) * step) / steps, lat0 + ((lat1 - lat0) * step) / steps]);
-            }
-        }
-
-        return result;
-    };
 
     app.loadCountries = async function () {
         const response = await fetch(app.constants.countriesUrl);
@@ -97,57 +72,79 @@ export const execute = async (app) => {
     // All countries share one mesh and one line object, so the whole map costs two draw calls
     app.buildLand = function () {
         const { altitude } = app.constants;
-        const chunks = [];
+        const positions = [];
         const indices = [];
         const borders = [];
         let offset = 0;
 
         for (const country of app.countries) {
             const start = offset;
+            const indexStart = indices.length;
 
             for (const part of country.parts) {
-                const geometry = new ConicPolygonGeometry(part.coordinates, 0, radius * (1 + altitude.base), false, true, false, 2);
-                const position = geometry.getAttribute("position");
+                const { vertices, indices: triangles } = app.triangulatePolygon(part.coordinates, 3);
 
-                chunks.push(position.array);
-                for (const index of geometry.index.array) indices.push(index + offset);
-                offset += position.count;
-                geometry.dispose();
+                for (const [lng, lat] of vertices) positions.push(...app.toCartesian(lat, lng, radius * (1 + altitude.base)));
+                for (const index of triangles) indices.push(index + offset);
+                offset += vertices.length;
 
-                for (const ring of part.coordinates) {
-                    for (let i = 1; i < ring.length; i++) {
-                        borders.push(
-                            ...app.toCartesian(ring[i - 1][1], ring[i - 1][0], radius * (1 + altitude.border)),
-                            ...app.toCartesian(ring[i][1], ring[i][0], radius * (1 + altitude.border)),
-                        );
-                    }
-                }
+                app.forEachSegment(part.coordinates, (from, to) => borders.push(
+                    ...app.toCartesian(from[1], from[0], radius * (1 + altitude.border)),
+                    ...app.toCartesian(to[1], to[0], radius * (1 + altitude.border)),
+                ));
             }
 
-            country.range = { start, count: offset - start };
+            country.range = { start, count: offset - start, indexStart, indexCount: indices.length - indexStart };
         }
 
-        const positions = new Float32Array(offset * 3);
-        chunks.reduce((cursor, chunk) => (positions.set(chunk, cursor), cursor + chunk.length), 0);
-
         const landGeometry = new BufferGeometry();
-        landGeometry.setAttribute("position", new BufferAttribute(positions, 3));
+        landGeometry.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
         landGeometry.setAttribute("color", new BufferAttribute(new Float32Array(offset * 3), 3));
         landGeometry.setIndex(new BufferAttribute(new Uint32Array(indices), 1));
 
         const borderGeometry = new BufferGeometry();
         borderGeometry.setAttribute("position", new BufferAttribute(new Float32Array(borders), 3));
 
+        // The raised cap reuses the land buffers through a draw range, so selecting even Russia builds no new triangles
+        const capGeometry = new BufferGeometry();
+        capGeometry.setAttribute("position", landGeometry.getAttribute("position"));
+        capGeometry.setIndex(landGeometry.index);
+
         app.land = new Mesh(landGeometry, new MeshBasicMaterial({ vertexColors: true, side: DoubleSide }));
         app.borders = new LineSegments(borderGeometry, new LineBasicMaterial({ transparent: true, depthWrite: false }));
-        app.selection = new Group();
+        app.selectionCap = new Mesh(capGeometry, new MeshBasicMaterial({ side: DoubleSide }));
+        app.selectionWalls = new Mesh(new BufferGeometry(), new MeshBasicMaterial({ side: DoubleSide }));
 
-        app.selectionMaterials = {
-            side: new MeshBasicMaterial({ side: DoubleSide }),
-            cap: new MeshBasicMaterial({ side: DoubleSide }),
-        };
+        app.selectionCap.scale.setScalar((1 + altitude.selected) / (1 + altitude.base));
+        app.selectionCap.visible = app.selectionWalls.visible = false;
+        app.selectionCap.frustumCulled = app.selectionWalls.frustumCulled = false;
 
-        app.globe.scene().add(app.land, app.borders, app.selection);
+        app.globe.scene().add(app.land, app.borders, app.selectionCap, app.selectionWalls);
+    };
+
+    app.forEachSegment = function (rings, callback) {
+        for (const ring of rings) {
+            for (let i = 1; i < ring.length; i++) {
+                if (Math.abs(ring[i][0] - ring[i - 1][0]) <= 180) callback(ring[i - 1], ring[i]);
+            }
+        }
+    };
+
+    app.buildWalls = function (country) {
+        const { altitude } = app.constants;
+        const positions = [];
+
+        for (const part of country.parts) {
+            app.forEachSegment(part.coordinates, (from, to) => {
+                const [a, b] = [from, to].map(([lng, lat]) => app.toCartesian(lat, lng, radius * (1 + altitude.base)));
+                const [c, d] = [from, to].map(([lng, lat]) => app.toCartesian(lat, lng, radius * (1 + altitude.selected)));
+                positions.push(...a, ...b, ...c, ...b, ...d, ...c);
+            });
+        }
+
+        const geometry = new BufferGeometry();
+        geometry.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
+        return geometry;
     };
 
     app.paintCountry = function (country) {
@@ -161,8 +158,8 @@ export const execute = async (app) => {
         attribute.needsUpdate = true;
 
         if (country === app.selected) {
-            app.selectionMaterials.cap.color.set(app.getCapColor(country));
-            app.selectionMaterials.side.color.set(app.getSideColor(country));
+            app.selectionCap.material.color.set(app.getCapColor(country));
+            app.selectionWalls.material.color.set(app.getSideColor(country));
         }
     };
 
@@ -185,22 +182,16 @@ export const execute = async (app) => {
     };
 
     app.buildSelection = function () {
-        const { altitude } = app.constants;
         const accent = app.getThemeColors().accent;
         const country = app.selected;
         const marker = country?.view.small ? [{ ...country.view, maxRadius: Math.max(0.5, country.view.span * 0.7) }] : [];
 
-        for (const mesh of app.selection.children) mesh.geometry.dispose();
-        app.selection.clear();
+        app.selectionWalls.geometry.dispose();
+        app.selectionWalls.geometry = country ? app.buildWalls(country) : new BufferGeometry();
+        app.selectionCap.visible = app.selectionWalls.visible = Boolean(country);
 
         if (country) {
-            const materials = [app.selectionMaterials.side, app.selectionMaterials.cap];
-
-            for (const part of country.parts) {
-                const geometry = new ConicPolygonGeometry(part.coordinates, radius * (1 + altitude.base), radius * (1 + altitude.selected), false, true, true, 2);
-                app.selection.add(new Mesh(geometry, materials));
-            }
-
+            app.selectionCap.geometry.setDrawRange(country.range.indexStart, country.range.indexCount);
             app.paintCountry(country);
         }
 

@@ -1,3 +1,5 @@
+import countryNames from "../libs/countryNames.json";
+
 export const execute = async (app) => {
     app.createEmptyState = function () {
         return {
@@ -11,6 +13,7 @@ export const execute = async (app) => {
         try {
             const raw = localStorage.getItem(app.constants.storageKey);
             app.state = raw ? app.normalizeState(JSON.parse(raw)) : app.createEmptyState();
+            if (raw && JSON.stringify(app.state) !== raw) app.saveState();
         } catch (error) {
             console.error("Failed to read saved state:", error);
             app.state = app.createEmptyState();
@@ -37,8 +40,12 @@ export const execute = async (app) => {
 
         if (["light", "dark"].includes(data.settings?.theme)) state.settings.theme = data.settings.theme;
 
-        for (const [name, entry] of Object.entries(data.countries || {})) {
+        // Notes saved before names were expanded (e.g. "eSwatini") move to the current name
+        for (const [savedName, entry] of Object.entries(data.countries || {})) {
             if (!entry || typeof entry !== "object") continue;
+
+            const name = countryNames[savedName] ?? savedName;
+            if (name !== savedName && data.countries[name]) continue;
 
             const note = typeof entry.note === "string" ? entry.note : "";
             const color = app.isHexColor(entry.color) ? entry.color.toLowerCase() : null;
