@@ -9,7 +9,7 @@ export const execute = async (app) => {
         document.addEventListener("keydown", (event) => {
             const typing = ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName);
 
-            if (document.getElementById("reset-dialog").open) return;
+            if (document.querySelector("dialog[open]")) return;
             if (event.key === "Escape" && app.isSettingsOpen()) return app.closeSettings(true);
             if (event.key === "Escape" && !typing) app.clearSelection();
             if (event.key === "/" && !typing) {

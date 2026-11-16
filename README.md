@@ -10,6 +10,7 @@ Interactive 3D globe for keeping notes about countries. Live at https://meff1u.g
 - **Selection highlight**: the selected country is raised, lit up and outlined; very small countries also get a pulsing marker so they're easy to spot
 - **Hover tooltips** showing the country name and a preview of its note
 - **Search** to find a country by name and fly the camera to it
+- **Random country** picker: any country, one without a note, or one you've already written about
 - **Import and export** of all notes, colors and settings as a JSON file
 - **Light and dark theme**, defaulting to your system preference
 - **Factory reset** to wipe all notes and settings, with a confirmation step
@@ -51,6 +52,7 @@ The counter at the bottom of the screen shows how many notes and colored countri
 
 The gear icon in the top right corner opens the settings menu:
 
+- **Random country** opens a picker: **Any country**, **Without a note** or **With a note**. Each option shows how many countries it can pick from, and empty ones are disabled. The globe flies to the drawn country and opens its panel
 - **Theme** switches between light and dark
 - **Import notes** and **Export notes** (see below)
 - **Factory reset** deletes all notes, colors and settings. A confirmation window shows how much will be removed and lets you export a backup first. This cannot be undone

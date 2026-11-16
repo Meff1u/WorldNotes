@@ -2,9 +2,23 @@ export const execute = async (app) => {
     const elements = {};
 
     app.bindSettings = function () {
-        for (const id of ["settings", "settings-toggle", "settings-menu", "theme", "theme-value", "import", "export", "import-file", "factory-reset", "reset-dialog", "reset-summary", "reset-export", "reset-cancel", "reset-confirm"]) {
+        for (const id of ["settings", "settings-toggle", "settings-menu", "random", "random-dialog", "random-cancel", "theme", "theme-value", "import", "export", "import-file", "factory-reset", "reset-dialog", "reset-summary", "reset-export", "reset-cancel", "reset-confirm"]) {
             elements[id] = document.getElementById(id);
         }
+
+        elements.random.addEventListener("click", () => {
+            app.closeSettings();
+            app.openRandomDialog();
+        });
+
+        for (const option of elements["random-dialog"].querySelectorAll(".option")) {
+            option.addEventListener("click", () => {
+                elements["random-dialog"].close();
+                app.pickRandomCountry(option.dataset.pool);
+            });
+        }
+
+        elements["random-cancel"].addEventListener("click", () => elements["random-dialog"].close());
 
         elements["settings-toggle"].addEventListener("click", () => (app.isSettingsOpen() ? app.closeSettings() : app.openSettings()));
 
@@ -42,9 +56,11 @@ export const execute = async (app) => {
             app.factoryReset();
         });
 
-        elements["reset-dialog"].addEventListener("click", (event) => {
-            if (event.target === elements["reset-dialog"]) elements["reset-dialog"].close();
-        });
+        for (const dialog of [elements["reset-dialog"], elements["random-dialog"]]) {
+            dialog.addEventListener("click", (event) => {
+                if (event.target === dialog) dialog.close();
+            });
+        }
 
         document.addEventListener("pointerdown", (event) => {
             if (app.isSettingsOpen() && !elements.settings.contains(event.target)) app.closeSettings();
@@ -80,6 +96,39 @@ export const execute = async (app) => {
 
     app.updateThemeLabel = function () {
         elements["theme-value"].textContent = app.state.settings.theme === "dark" ? "Dark" : "Light";
+    };
+
+    app.getRandomPools = function () {
+        const hasNote = (country) => Boolean(app.getEntry(country.name)?.note.trim());
+
+        return {
+            all: app.countries,
+            unnoted: app.countries.filter((country) => !hasNote(country)),
+            noted: app.countries.filter(hasNote),
+        };
+    };
+
+    app.openRandomDialog = function () {
+        app.flushNote();
+
+        const pools = app.getRandomPools();
+
+        for (const option of elements["random-dialog"].querySelectorAll(".option")) {
+            const count = pools[option.dataset.pool].length;
+            option.disabled = !count;
+            option.querySelector(".option-count").textContent = `${count} ${count === 1 ? "country" : "countries"}`;
+        }
+
+        elements["random-dialog"].showModal();
+        elements["random-dialog"].querySelector(".option:not(:disabled)")?.focus();
+    };
+
+    app.pickRandomCountry = function (pool) {
+        const candidates = app.getRandomPools()[pool];
+        const fresh = candidates.length > 1 ? candidates.filter((country) => country !== app.selected) : candidates;
+        const country = fresh[Math.floor(Math.random() * fresh.length)];
+
+        if (country) app.selectCountry(country, true);
     };
 
     app.openResetDialog = function () {
