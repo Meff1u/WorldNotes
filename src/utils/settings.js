@@ -56,11 +56,8 @@ export const execute = async (app) => {
             app.factoryReset();
         });
 
-        for (const dialog of [elements["reset-dialog"], elements["random-dialog"]]) {
-            dialog.addEventListener("click", (event) => {
-                if (event.target === dialog) dialog.close();
-            });
-        }
+        app.closeOnBackdrop(elements["reset-dialog"]);
+        app.closeOnBackdrop(elements["random-dialog"]);
 
         document.addEventListener("pointerdown", (event) => {
             if (app.isSettingsOpen() && !elements.settings.contains(event.target)) app.closeSettings();

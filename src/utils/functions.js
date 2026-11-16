@@ -37,6 +37,17 @@ export const execute = async (app) => {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
+    // Dialog padding belongs to the dialog element too, so only clicks outside its box count as the backdrop
+    app.closeOnBackdrop = function (dialog) {
+        dialog.addEventListener("click", (event) => {
+            if (event.target !== dialog) return;
+
+            const box = dialog.getBoundingClientRect();
+            const inside = event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
+            if (!inside) dialog.close();
+        });
+    };
+
     app.toast = function (message, type = "info") {
         const toast = Object.assign(document.createElement("div"), { className: `toast ${type}`, textContent: message });
         document.getElementById("toasts").append(toast);

@@ -22,6 +22,7 @@ export const execute = async (app) => {
 
         app.bindSearch();
         app.bindSettings();
+        app.bindCountryList();
     };
 
     app.bindSearch = function () {
