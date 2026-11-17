@@ -259,6 +259,7 @@ export const execute = async (app) => {
             .ringRepeatPeriod(1100);
 
         app.globe.renderer().setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        app.startDepthRange();
 
         const controls = app.globe.controls();
         controls.minDistance = view.minDistance;
@@ -278,6 +279,26 @@ export const execute = async (app) => {
             app.setViewShift(app.viewShift.open, true);
         });
     };
+
+    // Depth precision depends on the near plane: keeping it just in front of the globe instead of at 0.05
+    // stops land and ocean from flickering into each other when zoomed out, especially on mobile GPUs
+    app.startDepthRange = function () {
+        const camera = app.globe.camera();
+        let last = 0;
+
+        const update = () => {
+            const distance = camera.position.length();
+            if (Math.abs(distance - last) > 0.01) {
+                last = distance;
+                camera.near = Math.max(0.1, (distance - radius) * 0.5);
+                camera.far = distance + radius * 1.5;
+                camera.updateProjectionMatrix();
+            }
+            requestAnimationFrame(update);
+        };
+
+        update();
+    }
 
     // Hit testing on lat/lng instead of raycasting thousands of triangles keeps pointer moves cheap
     app.findCountryAt = function (x, y) {
