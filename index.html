@@ -46,6 +46,10 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11" /><g fill="currentColor" stroke="none"><circle cx="4.5" cy="6" r="1.5" /><circle cx="4.5" cy="12" r="1.5" /><circle cx="4.5" cy="18" r="1.5" /></g></svg>
                     <span>Country list</span>
                 </button>
+                <button class="menu-item" id="groups" role="menuitem">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+                    <span>Groups</span>
+                </button>
                 <button class="menu-item" id="random" role="menuitem">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" /><g fill="currentColor" stroke="none"><circle cx="8" cy="8" r="1.5" /><circle cx="16" cy="8" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="8" cy="16" r="1.5" /><circle cx="16" cy="16" r="1.5" /></g></svg>
                     <span>Random country</span>
@@ -101,10 +105,68 @@
                     <button class="chip" data-filter="unnoted" role="radio">Without note <span></span></button>
                     <button class="chip" data-filter="colored" role="radio">Colored <span></span></button>
                 </div>
+                <select class="select" id="list-group" aria-label="Filter by group" hidden></select>
             </div>
 
             <ul class="list-items" id="list-items" aria-label="Countries"></ul>
             <p class="list-empty" id="list-empty" hidden>No countries match your search</p>
+        </dialog>
+
+        <dialog class="dialog dialog-list" id="groups-dialog" aria-label="Groups">
+            <div class="groups-view" id="groups-list-view">
+                <div class="list-header">
+                    <h2>Groups</h2>
+                    <button class="icon-button" id="groups-close" title="Close" aria-label="Close groups">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                    </button>
+                </div>
+                <div class="list-controls">
+                    <button class="button button-primary" id="group-new">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                        New group
+                    </button>
+                </div>
+                <ul class="list-items" id="groups-items" aria-label="Groups"></ul>
+                <p class="list-empty" id="groups-empty" hidden>No groups yet. Create one here, or add a country to a new group from its panel.</p>
+            </div>
+
+            <div class="groups-view" id="group-detail-view" hidden>
+                <div class="list-header group-detail-header">
+                    <button class="icon-button" id="group-back" title="All groups" aria-label="Back to all groups">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                    </button>
+                    <input class="group-name-input" id="group-name" maxlength="60" autocomplete="off" aria-label="Group name" />
+                    <button class="icon-button" id="group-detail-close" title="Close" aria-label="Close groups">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                    </button>
+                </div>
+                <div class="group-detail-body">
+                    <section class="panel-section">
+                        <div class="section-head">
+                            <h3>Group color</h3>
+                        </div>
+                        <div class="swatches" id="group-swatches"></div>
+                    </section>
+                    <section class="panel-section">
+                        <div class="section-head">
+                            <h3>Group note</h3>
+                            <span class="save-status" id="group-save-status"></span>
+                        </div>
+                        <textarea id="group-note" placeholder="Write something about this group…"></textarea>
+                    </section>
+                    <section class="panel-section">
+                        <div class="section-head">
+                            <h3 id="group-members-title">Countries</h3>
+                        </div>
+                        <ul class="member-list" id="group-members"></ul>
+                        <p class="hint" id="group-members-empty">Add countries from their panel on the globe.</p>
+                    </section>
+                </div>
+                <div class="panel-footer">
+                    <button class="button" id="group-show">Show on globe</button>
+                    <button class="text-button danger" id="group-delete">Delete group</button>
+                </div>
+            </div>
         </dialog>
 
         <dialog class="dialog" id="random-dialog" aria-labelledby="random-title">
@@ -126,6 +188,10 @@
                     <span class="option-title">With a note</span>
                     <span class="option-count" data-count="noted"></span>
                 </button>
+            </div>
+            <div class="random-groups" id="random-groups" hidden>
+                <h3 class="options-label">From a group</h3>
+                <div class="dialog-options" id="random-group-options"></div>
             </div>
             <div class="dialog-actions">
                 <span class="dialog-spacer"></span>
@@ -164,6 +230,14 @@
 
         <div class="stats" id="stats"></div>
 
+        <div class="group-banner" id="group-banner" role="status" hidden>
+            <i class="list-swatch" id="group-banner-dot"></i>
+            <span id="group-banner-text"></span>
+            <button class="icon-button" id="group-banner-close" title="Stop showing the group" aria-label="Stop showing the group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+            </button>
+        </div>
+
         <aside class="panel" id="panel" aria-hidden="true">
             <div class="panel-header">
                 <div>
@@ -180,7 +254,27 @@
                     <h3>Surface color</h3>
                     <button class="text-button" id="color-reset">Reset</button>
                 </div>
+                <div class="segmented" id="color-mode" role="radiogroup" aria-label="Color source">
+                    <button type="button" role="radio" data-mode="own">Own color</button>
+                    <button type="button" role="radio" data-mode="group">Group color</button>
+                </div>
                 <div class="swatches" id="swatches"></div>
+                <div class="group-colors" id="group-colors" role="radiogroup" aria-label="Group to take the color from" hidden></div>
+            </section>
+
+            <section class="panel-section">
+                <div class="section-head">
+                    <h3>Groups</h3>
+                </div>
+                <div class="group-chips" id="country-groups"></div>
+                <select class="select" id="group-add" aria-label="Add this country to a group"></select>
+                <form class="group-create" id="group-create" hidden>
+                    <input class="input" id="group-create-name" placeholder="New group name" maxlength="60" autocomplete="off" aria-label="New group name" />
+                    <button class="button button-primary" type="submit">Create</button>
+                    <button class="icon-button" type="button" id="group-create-cancel" title="Cancel" aria-label="Cancel creating a group">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                    </button>
+                </form>
             </section>
 
             <section class="panel-section panel-grow">

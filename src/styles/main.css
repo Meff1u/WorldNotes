@@ -343,6 +343,8 @@ svg {
 
 .dialog {
     width: min(420px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
     margin: auto;
     padding: 24px;
     border: 1px solid var(--border);
@@ -664,6 +666,376 @@ svg {
     background: color-mix(in srgb, var(--danger) 85%, #000000);
 }
 
+.button-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-color: transparent;
+    background: var(--accent);
+    color: #ffffff;
+}
+
+.button-primary svg {
+    width: 16px;
+    height: 16px;
+}
+
+.button-primary:not(:disabled):hover {
+    background: color-mix(in srgb, var(--accent) 85%, #000000);
+}
+
+.input,
+.select {
+    height: 36px;
+    min-width: 0;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+    background-color: var(--input-bg);
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.input:focus,
+.select:focus {
+    border-color: var(--accent);
+}
+
+.select {
+    width: 100%;
+    padding-right: 32px;
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238c97ab' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 10px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+}
+
+.select option {
+    background: var(--surface-solid);
+    color: var(--text);
+}
+
+.select[hidden] {
+    display: none;
+}
+
+.segmented {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    padding: 3px;
+    border-radius: var(--radius-small);
+    background: var(--input-bg);
+    box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.segmented button {
+    height: 30px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 550;
+    transition: background 0.15s, color 0.15s;
+}
+
+.segmented button:not(:disabled):hover {
+    color: var(--text);
+}
+
+.segmented button[aria-checked="true"] {
+    background: var(--surface-solid);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 1px var(--border);
+}
+
+.swatches[hidden],
+.group-colors[hidden],
+.group-create[hidden],
+.text-button[hidden] {
+    display: none;
+}
+
+.group-colors {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.group-color-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-small);
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.group-color-option:hover {
+    background: var(--surface-hover);
+}
+
+.group-color-option[aria-checked="true"] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.group-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.group-chips:empty {
+    display: none;
+}
+
+.group-chip {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--input-bg);
+}
+
+.group-chip-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    padding: 5px 4px 5px 10px;
+    font-size: 12.5px;
+    font-weight: 550;
+}
+
+.group-chip-name span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.group-chip-name:hover span {
+    text-decoration: underline;
+}
+
+.group-chip .list-swatch {
+    width: 9px;
+    height: 9px;
+}
+
+.group-chip-remove {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 3px;
+    border-radius: 50%;
+    color: var(--text-muted);
+}
+
+.group-chip-remove svg {
+    width: 12px;
+    height: 12px;
+}
+
+.group-chip-remove:hover {
+    background: var(--surface-hover);
+    color: var(--danger);
+}
+
+.group-create {
+    display: flex;
+    gap: 6px;
+}
+
+.group-create .input {
+    flex: 1;
+}
+
+.groups-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.groups-view[hidden] {
+    display: none;
+}
+
+.group-detail-header {
+    gap: 6px;
+    padding: 12px 14px 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.group-name-input {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-small);
+    background: none;
+    font-size: 18px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.group-name-input:hover {
+    background: var(--input-bg);
+}
+
+.group-name-input:focus {
+    border-color: var(--accent);
+    background: var(--input-bg);
+}
+
+.group-detail-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.group-detail-body .swatches {
+    grid-template-columns: repeat(13, 1fr);
+    gap: 7px;
+}
+
+.group-detail-body textarea {
+    min-height: 110px;
+}
+
+.member-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0 -8px;
+    padding: 0;
+    list-style: none;
+}
+
+.member-row {
+    display: flex;
+    align-items: center;
+}
+
+.member-row .list-row {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 8px;
+}
+
+.member-remove {
+    width: 30px;
+    height: 30px;
+    opacity: 0.6;
+}
+
+.member-remove svg {
+    width: 15px;
+    height: 15px;
+}
+
+.member-remove:hover {
+    opacity: 1;
+    color: var(--danger);
+}
+
+.hint {
+    color: var(--text-muted);
+    font-size: 12.5px;
+}
+
+.hint[hidden] {
+    display: none;
+}
+
+.list-meta {
+    margin-left: auto;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.options-label {
+    margin-top: 18px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.random-groups .dialog-options {
+    margin-top: 8px;
+}
+
+.random-groups[hidden] {
+    display: none;
+}
+
+.option-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.option-title .list-swatch {
+    width: 10px;
+    height: 10px;
+}
+
+.group-banner {
+    position: fixed;
+    top: 76px;
+    left: 50%;
+    z-index: 12;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100vw - 32px);
+    padding: 4px 4px 4px 14px;
+    transform: translateX(-50%);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    box-shadow: var(--shadow);
+    font-size: 13px;
+    font-weight: 550;
+    animation: toast-in 0.3s var(--ease);
+}
+
+.group-banner span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.group-banner .icon-button {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+}
+
+.group-banner .icon-button svg {
+    width: 15px;
+    height: 15px;
+}
+
+.group-banner[hidden] {
+    display: none;
+}
+
 .zoom-controls {
     position: fixed;
     left: 16px;
@@ -699,6 +1071,8 @@ svg {
     max-width: calc(100vw - 32px);
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     border-radius: var(--radius);
     z-index: 20;
     transform: translateX(calc(100% + 24px));
@@ -827,7 +1201,7 @@ svg {
 
 textarea {
     flex: 1;
-    min-height: 140px;
+    min-height: 120px;
     width: 100%;
     padding: 12px 14px;
     border: 1px solid var(--border);
@@ -888,13 +1262,20 @@ textarea::placeholder {
     white-space: pre-line;
 }
 
+.globe-tooltip em {
+    color: var(--accent);
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 550;
+}
+
 .globe-tooltip[hidden] {
     display: none;
 }
 
 .toasts {
     position: fixed;
-    top: 72px;
+    top: 124px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;

@@ -1,16 +1,17 @@
 export const execute = async (app) => {
     const elements = {};
     let filter = "all";
+    let groupFilter = "";
 
     const filters = {
         all: () => true,
-        noted: (entry) => Boolean(entry?.note.trim()),
-        unnoted: (entry) => !entry?.note.trim(),
-        colored: (entry) => Boolean(entry?.color),
+        noted: (name) => Boolean(app.getEntry(name)?.note.trim()),
+        unnoted: (name) => !app.getEntry(name)?.note.trim(),
+        colored: (name) => Boolean(app.getCountryColor(name)),
     };
 
     app.bindCountryList = function () {
-        for (const id of ["country-list", "list-dialog", "list-close", "list-search", "list-filters", "list-items", "list-empty"]) {
+        for (const id of ["country-list", "list-dialog", "list-close", "list-search", "list-filters", "list-group", "list-items", "list-empty"]) {
             elements[id] = document.getElementById(id);
         }
 
@@ -35,6 +36,11 @@ export const execute = async (app) => {
             });
         }
 
+        elements["list-group"].addEventListener("change", () => {
+            groupFilter = elements["list-group"].value;
+            app.renderCountryList();
+        });
+
         elements["list-items"].addEventListener("keydown", (event) => {
             if (!["ArrowDown", "ArrowUp"].includes(event.key)) return;
 
@@ -53,26 +59,41 @@ export const execute = async (app) => {
     app.openCountryList = function () {
         app.flushNote();
         elements["list-search"].value = "";
+        app.renderGroupFilter();
         app.renderCountryList();
         elements["list-items"].scrollTop = 0;
         elements["list-dialog"].showModal();
         elements["list-search"].focus();
     };
 
+    app.renderGroupFilter = function () {
+        const groups = app.getGroups();
+        if (!app.state.groups[groupFilter]) groupFilter = "";
+
+        elements["list-group"].replaceChildren(
+            new Option("All groups", "", false, !groupFilter),
+            ...groups.map((group) => new Option(`${group.name} (${group.members.length})`, group.id, false, group.id === groupFilter)),
+        );
+        elements["list-group"].hidden = !groups.length;
+    };
+
     app.renderCountryList = function () {
         const query = app.normalizeText(elements["list-search"].value.trim());
+        const members = groupFilter && app.state.groups[groupFilter]?.members;
         const matching = app.countries.filter((country) => {
+            if (members && !members.includes(country.name)) return false;
+
             const note = app.getEntry(country.name)?.note;
             return !query || country.searchName.includes(query) || (note && app.normalizeText(note).includes(query));
         });
 
         for (const chip of elements["list-filters"].querySelectorAll(".chip")) {
-            const count = matching.filter((country) => filters[chip.dataset.filter](app.getEntry(country.name))).length;
+            const count = matching.filter((country) => filters[chip.dataset.filter](country.name)).length;
             chip.querySelector("span").textContent = count;
             chip.setAttribute("aria-checked", String(chip.dataset.filter === filter));
         }
 
-        const visible = matching.filter((country) => filters[filter](app.getEntry(country.name)));
+        const visible = matching.filter((country) => filters[filter](country.name));
 
         elements["list-items"].replaceChildren(...visible.map((country) => app.createCountryRow(country)));
         elements["list-empty"].hidden = Boolean(visible.length);
@@ -80,14 +101,14 @@ export const execute = async (app) => {
     };
 
     app.createCountryRow = function (country) {
-        const entry = app.getEntry(country.name);
-        const note = entry?.note.trim();
+        const note = app.getEntry(country.name)?.note.trim();
+        const color = app.getCountryColor(country.name);
         const item = document.createElement("li");
         const button = Object.assign(document.createElement("button"), { className: "list-row" });
-        const swatch = Object.assign(document.createElement("i"), { className: `list-swatch${entry?.color ? "" : " empty"}` });
+        const swatch = Object.assign(document.createElement("i"), { className: `list-swatch${color ? "" : " empty"}` });
         const text = Object.assign(document.createElement("span"), { className: "list-text" });
 
-        if (entry?.color) swatch.style.setProperty("--swatch", entry.color);
+        if (color) swatch.style.setProperty("--swatch", color);
         if (country === app.selected) button.classList.add("current");
 
         text.append(Object.assign(document.createElement("span"), { className: "list-name", textContent: country.name }));

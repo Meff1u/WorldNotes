@@ -1,6 +1,7 @@
 export default {
     storageKey: "worldnotes",
-    dataVersion: 1,
+    dataVersion: 2,
+    groupNameLength: 60,
     countriesUrl: `${import.meta.env.BASE_URL}data/countries.json`,
     view: {
         initial: { lat: 30, lng: 15, altitude: 2 },

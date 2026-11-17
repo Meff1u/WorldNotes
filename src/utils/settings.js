@@ -2,7 +2,7 @@ export const execute = async (app) => {
     const elements = {};
 
     app.bindSettings = function () {
-        for (const id of ["settings", "settings-toggle", "settings-menu", "random", "random-dialog", "random-cancel", "theme", "theme-value", "import", "export", "import-file", "factory-reset", "reset-dialog", "reset-summary", "reset-export", "reset-cancel", "reset-confirm"]) {
+        for (const id of ["settings", "settings-toggle", "settings-menu", "random", "random-dialog", "random-cancel", "random-groups", "random-group-options", "theme", "theme-value", "import", "export", "import-file", "factory-reset", "reset-dialog", "reset-summary", "reset-export", "reset-cancel", "reset-confirm"]) {
             elements[id] = document.getElementById(id);
         }
 
@@ -11,12 +11,13 @@ export const execute = async (app) => {
             app.openRandomDialog();
         });
 
-        for (const option of elements["random-dialog"].querySelectorAll(".option")) {
-            option.addEventListener("click", () => {
-                elements["random-dialog"].close();
-                app.pickRandomCountry(option.dataset.pool);
-            });
-        }
+        elements["random-dialog"].addEventListener("click", (event) => {
+            const option = event.target.closest(".option[data-pool]");
+            if (!option || option.disabled) return;
+
+            elements["random-dialog"].close();
+            app.pickRandomCountry(option.dataset.pool);
+        });
 
         elements["random-cancel"].addEventListener("click", () => elements["random-dialog"].close());
 
@@ -97,23 +98,42 @@ export const execute = async (app) => {
 
     app.getRandomPools = function () {
         const hasNote = (country) => Boolean(app.getEntry(country.name)?.note.trim());
-
-        return {
+        const pools = {
             all: app.countries,
             unnoted: app.countries.filter((country) => !hasNote(country)),
             noted: app.countries.filter(hasNote),
         };
+
+        for (const group of app.getGroups()) {
+            pools[`group:${group.id}`] = group.members.map((name) => app.findCountry(name)).filter(Boolean);
+        }
+
+        return pools;
     };
 
     app.openRandomDialog = function () {
         app.flushNote();
 
         const pools = app.getRandomPools();
+        const groups = app.getGroups();
+
+        elements["random-group-options"].replaceChildren(...groups.map((group) => {
+            const option = Object.assign(document.createElement("button"), { className: "option" });
+            const title = Object.assign(document.createElement("span"), { className: "option-title" });
+            const dot = Object.assign(document.createElement("i"), { className: "list-swatch" });
+
+            dot.style.setProperty("--swatch", group.color);
+            title.append(dot, document.createTextNode(group.name));
+            option.dataset.pool = `group:${group.id}`;
+            option.append(title, Object.assign(document.createElement("span"), { className: "option-count" }));
+            return option;
+        }));
+        elements["random-groups"].hidden = !groups.length;
 
         for (const option of elements["random-dialog"].querySelectorAll(".option")) {
             const count = pools[option.dataset.pool].length;
             option.disabled = !count;
-            option.querySelector(".option-count").textContent = `${count} ${count === 1 ? "country" : "countries"}`;
+            option.querySelector(".option-count").textContent = app.plural(count, "country");
         }
 
         elements["random-dialog"].showModal();
@@ -131,19 +151,18 @@ export const execute = async (app) => {
     app.openResetDialog = function () {
         app.flushNote();
 
-        const entries = Object.values(app.state.countries);
-        const notes = entries.filter((entry) => entry.note.trim()).length;
-        const colored = entries.filter((entry) => entry.color).length;
+        const { entries, notes, colored, groups } = app.getStateSummary();
+        const parts = [app.plural(notes, "note"), app.plural(colored, "color")];
+        if (groups) parts.push(app.plural(groups, "group"));
 
-        elements["reset-summary"].textContent = entries.length
-            ? `${notes} ${notes === 1 ? "note" : "notes"} and ${colored} ${colored === 1 ? "color" : "colors"}`
-            : "all saved data";
-        elements["reset-export"].disabled = !entries.length;
+        elements["reset-summary"].textContent = entries || groups ? parts.join(", ").replace(/, ([^,]*)$/, " and $1") : "all saved data";
+        elements["reset-export"].disabled = !entries && !groups;
         elements["reset-dialog"].showModal();
     };
 
     app.factoryReset = function () {
         app.clearSelection();
+        app.clearGroupHighlight();
 
         try {
             localStorage.removeItem(app.constants.storageKey);

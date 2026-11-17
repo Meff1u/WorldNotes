@@ -6,6 +6,7 @@ import { geoArea, geoBounds, geoCentroid, geoContains } from "d3-geo";
 export const execute = async (app) => {
     const radius = 100;
     const color = new Color();
+    let fullColorUpload = false;
 
     app.hovered = null;
     app.selected = null;
@@ -51,23 +52,32 @@ export const execute = async (app) => {
 
     app.getCapColor = function (country) {
         const colors = app.getThemeColors();
-        const custom = app.getEntry(country.name)?.color;
+        const custom = app.getCountryColor(country.name);
         const base = custom || colors.land;
 
         if (country === app.selected) return custom ? app.mixColors(custom, "#ffffff", 0.18) : app.mixColors(base, colors.accent, 0.5);
         if (country === app.hovered) return custom ? app.mixColors(custom, "#ffffff", 0.1) : app.mixColors(base, colors.accent, 0.22);
+
+        // While a group is shown its members take on the group color and everything else fades towards the ocean
+        if (app.highlightedGroup) {
+            return app.isHighlightMember(country.name)
+                ? app.mixColors(base, app.state.groups[app.highlightedGroup].color, custom ? 0.35 : 0.6)
+                : app.mixColors(base, colors.ocean, 0.55);
+        }
+
         return base;
     };
 
     app.getSideColor = function (country) {
         const colors = app.getThemeColors();
-        return app.mixColors(app.getEntry(country.name)?.color || colors.land, "#000000", colors.sideShade);
+        return app.mixColors(app.getCountryColor(country.name) || colors.land, "#000000", colors.sideShade);
     };
 
     app.getCountryLabel = function (country) {
         const note = app.getEntry(country.name)?.note.trim();
         const preview = note && note.length > 90 ? `${note.slice(0, 90)}…` : note;
-        return `<strong>${app.escapeHtml(country.name)}</strong>${preview ? `<span>${app.escapeHtml(preview)}</span>` : ""}`;
+        const groups = app.getCountryGroups(country.name).map((group) => group.name).join(", ");
+        return `<strong>${app.escapeHtml(country.name)}</strong>${groups ? `<em>${app.escapeHtml(groups)}</em>` : ""}${preview ? `<span>${app.escapeHtml(preview)}</span>` : ""}`;
     };
 
     // All countries share one mesh and one line object, so the whole map costs two draw calls
@@ -112,6 +122,9 @@ export const execute = async (app) => {
         capGeometry.setIndex(landGeometry.index);
 
         app.land = new Mesh(landGeometry, new MeshBasicMaterial({ vertexColors: true, side: DoubleSide }));
+        app.land.onAfterRender = () => {
+            fullColorUpload = false;
+        };
         app.borders = new LineSegments(borderGeometry, new LineBasicMaterial({ transparent: true, depthWrite: false }));
         app.selectionCap = new Mesh(capGeometry, new MeshBasicMaterial({ side: DoubleSide }));
         app.selectionWalls = new Mesh(new BufferGeometry(), new MeshBasicMaterial({ side: DoubleSide }));
@@ -155,7 +168,8 @@ export const execute = async (app) => {
         color.set(app.getCapColor(country));
         for (let i = start; i < start + count; i++) attribute.setXYZ(i, color.r, color.g, color.b);
 
-        attribute.addUpdateRange(start * 3, count * 3);
+        // A pending full repaint must not be narrowed down to this country's range before it reaches the GPU
+        if (!fullColorUpload) attribute.addUpdateRange(start * 3, count * 3);
         attribute.needsUpdate = true;
 
         if (country === app.selected) {
@@ -178,6 +192,7 @@ export const execute = async (app) => {
         }
 
         attribute.clearUpdateRanges();
+        fullColorUpload = true;
         attribute.needsUpdate = true;
         if (app.selected) app.paintCountry(app.selected);
     };

@@ -11,18 +11,25 @@ export const execute = async (app) => {
 
             if (document.querySelector("dialog[open]")) return;
             if (event.key === "Escape" && app.isSettingsOpen()) return app.closeSettings(true);
-            if (event.key === "Escape" && !typing) app.clearSelection();
+            if (event.key === "Escape" && !typing) {
+                if (app.selected) app.clearSelection();
+                else app.clearGroupHighlight();
+            }
             if (event.key === "/" && !typing) {
                 event.preventDefault();
                 document.getElementById("search").focus();
             }
         });
 
-        window.addEventListener("beforeunload", () => app.flushNote());
+        window.addEventListener("beforeunload", () => {
+            app.flushNote();
+            app.flushGroupNote();
+        });
 
         app.bindSearch();
         app.bindSettings();
         app.bindCountryList();
+        app.bindGroups();
     };
 
     app.bindSearch = function () {
@@ -39,7 +46,7 @@ export const execute = async (app) => {
                 item.append(Object.assign(document.createElement("span"), { textContent: country.name }));
                 if (entry) {
                     const dot = Object.assign(document.createElement("i"), { className: "search-dot" });
-                    dot.style.setProperty("--dot", entry.color || app.getThemeColors().accent);
+                    dot.style.setProperty("--dot", app.getCountryColor(country.name) || app.getThemeColors().accent);
                     item.append(dot);
                 }
 
