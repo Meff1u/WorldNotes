@@ -47,7 +47,7 @@ export const execute = async (app) => {
             const profile = app.mergeProfiles(local.profiles[id], remote.profiles[id]);
             const deletedAt = newest(local.deletedProfiles[id], remote.deletedProfiles[id]);
 
-            if (deletedAt && (!profile || time(deletedAt) >= time(profile.updatedAt))) merged.deletedProfile[id] = deletedAt;
+            if (deletedAt && (!profile || time(deletedAt) >= time(profile.updatedAt))) merged.deletedProfiles[id] = deletedAt;
             else if (profile) merged.profiles[id] = profile;
         }
 
