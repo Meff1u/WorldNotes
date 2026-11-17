@@ -104,8 +104,8 @@ export const execute = async (app) => {
             app.openGroups();
         });
 
-        elements["groups-close"].addEventListener("click", () => elements["groups-dialog"].close());
-        elements["group-detail-close"].addEventListener("click", () => elements["groups-dialog"].close());
+        elements["groups-close"].addEventListener("click", () => app.closeDialog(elements["groups-dialog"]));
+        elements["group-detail-close"].addEventListener("click", () => app.closeDialog(elements["groups-dialog"]));
         elements["group-back"].addEventListener("click", () => app.showGroupList());
         elements["groups-dialog"].addEventListener("close", () => {
             app.flushGroupNote();
@@ -131,7 +131,7 @@ export const execute = async (app) => {
 
         elements["group-show"].addEventListener("click", () => {
             const id = editing;
-            elements["groups-dialog"].close();
+            app.closeDialog(elements["groups-dialog"]);
             app.showGroupOnGlobe(id);
         });
 
@@ -166,7 +166,7 @@ export const execute = async (app) => {
         app.flushNote();
         if (id && app.state.groups[id]) app.openGroupDetail(id);
         else app.showGroupList();
-        if (!elements["groups-dialog"].open) elements["groups-dialog"].showModal();
+        app.openDialog(elements["groups-dialog"]);
     };
 
     app.showGroupList = function () {
@@ -212,7 +212,7 @@ export const execute = async (app) => {
 
         elements["groups-list-view"].hidden = true;
         elements["group-detail-view"].hidden = false;
-        if (!elements["groups-dialog"].open) elements["groups-dialog"].showModal();
+        app.openDialog(elements["groups-dialog"]);
         elements["group-name"].focus();
     };
 
@@ -236,7 +236,7 @@ export const execute = async (app) => {
 
             button.append(swatch, Object.assign(document.createElement("span"), { className: "list-name", textContent: country.name }));
             button.addEventListener("click", () => {
-                elements["groups-dialog"].close();
+                app.closeDialog(elements["groups-dialog"]);
                 app.selectCountry(country, true);
             });
 

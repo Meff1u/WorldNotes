@@ -20,7 +20,7 @@ export const execute = async (app) => {
             app.openCountryList();
         });
 
-        elements["list-close"].addEventListener("click", () => elements["list-dialog"].close());
+        elements["list-close"].addEventListener("click", () => app.closeDialog(elements["list-dialog"]));
         elements["list-search"].addEventListener("input", () => app.renderCountryList());
 
         elements["list-search"].addEventListener("keydown", (event) => {
@@ -62,7 +62,7 @@ export const execute = async (app) => {
         app.renderGroupFilter();
         app.renderCountryList();
         elements["list-items"].scrollTop = 0;
-        elements["list-dialog"].showModal();
+        app.openDialog(elements["list-dialog"]);
         elements["list-search"].focus();
     };
 
@@ -116,7 +116,7 @@ export const execute = async (app) => {
 
         button.append(swatch, text);
         button.addEventListener("click", () => {
-            elements["list-dialog"].close();
+            app.closeDialog(elements["list-dialog"]);
             app.selectCountry(country, true);
         });
 

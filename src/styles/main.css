@@ -285,12 +285,24 @@ svg {
     animation: menu-in 0.18s var(--ease);
 }
 
+.settings-menu.closing {
+    animation: menu-out 0.16s var(--ease) forwards;
+    pointer-events: none;
+}
+
 .settings-menu[hidden] {
     display: none;
 }
 
 @keyframes menu-in {
     from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-4px);
+    }
+}
+
+@keyframes menu-out {
+    to {
         opacity: 0;
         transform: scale(0.96) translateY(-4px);
     }
@@ -358,15 +370,46 @@ svg {
     animation: dialog-in 0.22s var(--ease);
 }
 
+.dialog.closing {
+    animation: dialog-out 0.18s var(--ease) forwards;
+    pointer-events: none;
+}
+
 .dialog::backdrop {
     background: rgba(4, 8, 16, 0.55);
     backdrop-filter: blur(3px);
+    animation: backdrop-in 0.22s var(--ease);
+}
+
+.dialog.closing::backdrop {
+    animation: backdrop-out 0.18s var(--ease) forwards;
 }
 
 @keyframes dialog-in {
     from {
         opacity: 0;
         transform: translateY(8px) scale(0.98);
+    }
+}
+
+@keyframes dialog-out {
+    to {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+}
+
+@keyframes backdrop-in {
+    from {
+        background: rgba(4, 8, 16, 0);
+        backdrop-filter: blur(0);
+    }
+}
+
+@keyframes backdrop-out {
+    to {
+        background: rgba(4, 8, 16, 0);
+        backdrop-filter: blur(0);
     }
 }
 

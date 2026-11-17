@@ -31,6 +31,7 @@ export const execute = async (app) => {
         app.bindCountryList();
         app.bindGroups();
         app.bindProfiles();
+        app.bindDialogs();
     };
 
     app.bindSearch = function () {

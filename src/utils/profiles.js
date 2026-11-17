@@ -123,7 +123,7 @@ export const execute = async (app) => {
             app.openProfiles();
         });
 
-        elements["profiles-close"].addEventListener("click", () => elements["profiles-dialog"].close());
+        elements["profiles-close"].addEventListener("click", () => app.closeDialog(elements["profiles-dialog"]));
 
         elements["profile-new"].addEventListener("click", () => {
             const id = app.createProfile();
@@ -142,7 +142,7 @@ export const execute = async (app) => {
         app.flushGroupNote();
         renaming = null;
         app.renderProfiles();
-        elements["profiles-dialog"].showModal();
+        app.openDialog(elements["profiles-dialog"]);
         elements["profile-new"].focus();
     };
 
@@ -200,7 +200,7 @@ export const execute = async (app) => {
             main.addEventListener("click", () => {
                 if (active) return;
                 app.switchProfile(profile.id);
-                elements["profiles-dialog"].close();
+                app.closeDialog(elements["profiles-dialog"]);
             });
 
             const rename = app.createIconButton("Rename profile", '<path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z" /><path d="m13.5 7.5 3 3" />');

@@ -47,6 +47,50 @@ export const execute = async (app) => {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
+    // Runs a closing animation (class "closing") before actually hiding the element; the timeout is a safety net
+    // for when no animation runs at all, e.g. with reduced motion or in a background tab
+    app.playClosing = function (element, done) {
+        if (element.classList.contains("closing")) return;
+
+        let finished = false;
+        const finish = () => {
+            if (finished) return;
+            finished = true;
+            element.removeEventListener("animationed", onEnd);
+
+            // Reopening during the animation removes the class, which cancels the hiding
+            if (!element.classList.contains("closing")) return;
+            element.classList.remove("closing");
+            done();
+        };
+        const onEnd = (event) => {
+            if (event.target === element) finish();
+        };
+
+        element.classList.add("closing");
+        element.addEventListener("animationed", onEnd);
+        setTimeout(finish, 300);
+    };
+
+    // The dialog stays open, and so above everything else, until its fade-out ends, which works in every browser
+    app.closeDialog = function (dialog) {
+        if (dialog.open) app.playClosing(dialog, () => dialog.close());
+    };
+
+    app.openDialog = function (dialog) {
+        dialog.classList.remove("closing");
+        if (!dialog.open) dialog.showModal();
+    };
+
+    app.bindDialogs = function () {
+        for (const dialog of document.querySelectorAll("dialog")) {
+            dialog.addEventListener("cancel", (event) => {
+                event.preventDefault();
+                app.closeDialog(dialog);
+            });
+        }
+    };
+
     // Dialog padding belongs to the dialog element too, so only clicks outside its box count as the backdrop
     app.closeOnBackdrop = function (dialog) {
         dialog.addEventListener("click", (event) => {
@@ -54,7 +98,7 @@ export const execute = async (app) => {
 
             const box = dialog.getBoundingClientRect();
             const inside = event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
-            if (!inside) dialog.close();
+            if (!inside) app.closeDialog(dialog);
         });
     };
 

@@ -15,11 +15,11 @@ export const execute = async (app) => {
             const option = event.target.closest(".option[data-pool]");
             if (!option || option.disabled) return;
 
-            elements["random-dialog"].close();
+            app.closeDialog(elements["random-dialog"]);
             app.pickRandomCountry(option.dataset.pool);
         });
 
-        elements["random-cancel"].addEventListener("click", () => elements["random-dialog"].close());
+        elements["random-cancel"].addEventListener("click", () => app.closeDialog(elements["random-dialog"]));
 
         elements["settings-toggle"].addEventListener("click", () => (app.isSettingsOpen() ? app.closeSettings() : app.openSettings()));
 
@@ -51,9 +51,9 @@ export const execute = async (app) => {
         });
 
         elements["reset-export"].addEventListener("click", () => app.exportData());
-        elements["reset-cancel"].addEventListener("click", () => elements["reset-dialog"].close());
+        elements["reset-cancel"].addEventListener("click", () => app.closeDialog(elements["reset-dialog"]));
         elements["reset-confirm"].addEventListener("click", () => {
-            elements["reset-dialog"].close();
+            app.closeDialog(elements["reset-dialog"]);
             app.factoryReset();
         });
 
@@ -77,17 +77,23 @@ export const execute = async (app) => {
     };
 
     app.isSettingsOpen = function () {
-        return !elements["settings-menu"].hidden;
+        const menu = elements["settings-menu"];
+        return !menu.hidden && !menu.classList.contains("closing");
     };
 
     app.openSettings = function () {
+        elements["settings-menu"].classList.remove("closing");
         elements["settings-menu"].hidden = false;
         elements["settings-toggle"].setAttribute("aria-expanded", "true");
         elements["settings-menu"].querySelector(".menu-item").focus({ preventScroll: true });
     };
 
     app.closeSettings = function (restoreFocus = false) {
-        elements["settings-menu"].hidden = true;
+        if (!app.isSettingsOpen()) return;
+
+        app.playClosing(elements["settings-menu"], () => {
+            elements["settings-menu"].hidden = true;
+        });
         elements["settings-toggle"].setAttribute("aria-expanded", "false");
         if (restoreFocus) elements["settings-toggle"].focus();
     };
@@ -136,7 +142,7 @@ export const execute = async (app) => {
             option.querySelector(".option-count").textContent = app.plural(count, "country");
         }
 
-        elements["random-dialog"].showModal();
+        app.openDialog(elements["random-dialog"]);
         elements["random-dialog"].querySelector(".option:not(:disabled)")?.focus();
     };
 
@@ -163,7 +169,7 @@ export const execute = async (app) => {
         const hasData = totals.entries || totals.groups || profiles.length > 1;
         elements["reset-summary"].textContent = hasData ? parts.join(", ").replace(/, ([^,]*)$/, " and $1") : "all saved data";
         elements["reset-export"].disabled = !hasData;
-        elements["reset-dialog"].showModal();
+        app.openDialog(elements["reset-dialog"]);
     };
 
     app.factoryReset = function () {
