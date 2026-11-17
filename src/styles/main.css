@@ -1496,13 +1496,27 @@ textarea::placeholder {
 
 @media (max-width: 720px) {
     .topbar {
-        top: 12px;
+        top: auto;
         left: 12px;
-        right: 68px;
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom));
         max-width: none;
         padding-left: 12px;
+        transition: opacity 0.25s var(--ease), transform 0.35s var(--ease), visibility 0s;
     }
 
+    body:has(.panel.open) .topbar {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(calc(100% + 24px));
+        transition: opacity 0.2s var(--ease), transform 0.35s var(--ease), visibility 0s 0.35s;
+    }
+
+    .search-results {
+        top: auto;
+        bottom: calc(100% + 8px);
+    }
+    
     .settings {
         top: 12px;
         right: 12px;
@@ -1529,8 +1543,10 @@ textarea::placeholder {
     }
 
     .zoom-controls {
+        top: 12px;
         left: 12px;
-        bottom: 12px;
+        bottom: auto;
+        flex-direction: row;
     }
 
     .stats {
