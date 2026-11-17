@@ -136,7 +136,7 @@ export const execute = async (app) => {
         profile.deleted = {
             countries: app.normalizeTombstones(data.deleted?.countries),
             groups: app.normalizeTombstones(data.deleted?.groups),
-        }
+        };
 
         return profile;
     };

@@ -32,6 +32,7 @@ export const execute = async (app) => {
         app.bindGroups();
         app.bindProfiles();
         app.bindDialogs();
+        app.bindSyncUi();
     };
 
     app.bindSearch = function () {

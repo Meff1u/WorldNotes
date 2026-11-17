@@ -1644,3 +1644,136 @@ textarea::placeholder {
         animation-duration: 0.01ms !important;
     }
 }
+
+.menu-item[hidden],
+.sync-view[hidden] {
+    display: none;
+}
+
+.sync-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.sync-google {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 42px;
+    margin-top: 6px;
+}
+
+.sync-google svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sync-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.sync-divider::before,
+.sync-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+.sync-email {
+    display: flex;
+    gap: 8px;
+}
+
+.sync-email .input {
+    flex: 1;
+}
+
+.sync-account,
+.first-sync-summary > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+    background: var(--input-bg);
+}
+
+.sync-account strong,
+.first-sync-summary strong {
+    overflow-wrap: anywhere;
+    font-weight: 600;
+}
+
+.sync-state {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+}
+
+.sync-dot[data-status="synced"] {
+    background: var(--success);
+}
+
+.sync-dot[data-status="syncing"] {
+    background: var(--accent);
+    animation: sync-pulse 1s ease-in-out infinite alternate;
+}
+
+.sync-dot[data-status="offline"] {
+    background: #f59e0b;
+}
+
+.sync-dot[data-status="error"] {
+    background: var(--danger);
+}
+
+@keyframes sync-pulse {
+    to {
+        opacity: 0.3;
+    }
+}
+
+.sync-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.sync-buttons .button {
+    flex: 1;
+}
+
+#sync-delete {
+    align-self: flex-start;
+}
+
+.sync-privacy {
+    margin-top: 16px;
+}
+
+.sync-privacy a {
+    color: var(--accent);
+}
+
+.first-sync-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 14px;
+}

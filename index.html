@@ -102,6 +102,11 @@
                     <span>Profile</span>
                     <span class="menu-value" id="profile-value"></span>
                 </button>
+                <button class="menu-item" id="sync" role="menuitem" hidden>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H8a5 5 0 1 1 .9-9.9A6 6 0 0 1 20 11.5a3.8 3.8 0 0 1-2.5 7.5z" /></svg>
+                    <span>Cloud sync</span>
+                    <span class="menu-value" id="sync-value"></span>
+                </button>
 
                 <div class="menu-separator" role="separator"></div>
 
@@ -231,6 +236,75 @@
 
             <ul class="list-items" id="list-items" aria-label="Countries"></ul>
             <p class="list-empty" id="list-empty" hidden>No countries match your search</p>
+        </dialog>
+
+                <dialog class="dialog" id="sync-dialog" aria-labelledby="sync-title">
+            <div class="dialog-icon accent">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H8a5 5 0 1 1 .9-9.9A6 6 0 0 1 20 11.5a3.8 3.8 0 0 1-2.5 7.5z" /></svg>
+            </div>
+            <h2 id="sync-title">Cloud sync</h2>
+
+            <div class="sync-view" id="sync-signed-out">
+                <p>Sign in to keep your profiles, notes and groups in step across your devices. It's optional: without signing in, everything stays only in this browser.</p>
+                <button class="button sync-google" id="sync-google" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285f4" d="M22.6 12.2c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 0 1-2.2 3.3v2.7h3.6c2-1.9 3.3-4.7 3.3-8z" /><path fill="#34a853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.8A11 11 0 0 0 12 23z" /><path fill="#fbbc05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.1a11 11 0 0 0 0 9.8z" /><path fill="#ea4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2A11 11 0 0 0 2.1 7.1l3.7 2.8C6.7 7.3 9.1 5.4 12 5.4z" /></svg>
+                    Continue with Google
+                </button>
+                <div class="sync-divider"><span>or get a sign-in link</span></div>
+                <form class="sync-email" id="sync-email-form">
+                    <input class="input" id="sync-email" type="email" placeholder="name@example.com" autocomplete="email" required aria-label="Email address" />
+                    <button class="button button-primary" type="submit">Send link</button>
+                </form>
+                <p class="hint" id="sync-message" role="status"></p>
+            </div>
+
+            <div class="sync-view" id="sync-signed-in" hidden>
+                <div class="sync-account">
+                    <span class="hint">Signed in as</span>
+                    <strong id="sync-account-email"></strong>
+                </div>
+                <div class="sync-state">
+                    <i class="sync-dot" id="sync-dot"></i>
+                    <span id="sync-status-text"></span>
+                </div>
+                <div class="sync-buttons">
+                    <button class="button" id="sync-now" type="button">Sync now</button>
+                    <button class="button" id="sync-sign-out" type="button">Sign out</button>
+                </div>
+                <button class="text-button danger" id="sync-delete" type="button">Delete account and cloud data</button>
+            </div>
+
+            <p class="hint sync-privacy">Your data is stored in Supabase only while you're signed in. <a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>
+            <div class="dialog-actions">
+                <span class="dialog-spacer"></span>
+                <button class="button" id="sync-close" type="button">Close</button>
+            </div>
+        </dialog>
+
+        <dialog class="dialog" id="first-sync-dialog" aria-labelledby="first-sync-title">
+            <div class="dialog-icon accent">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" /></svg>
+            </div>
+            <h2 id="first-sync-title">Combine your data?</h2>
+            <p>This device and your cloud account both already have data.</p>
+            <div class="first-sync-summary">
+                <div><span class="hint">This device</span><strong id="first-sync-local"></strong></div>
+                <div><span class="hint">Cloud</span><strong id="first-sync-remote"></strong></div>
+            </div>
+            <div class="dialog-options">
+                <button class="option" data-choice="merge" type="button">
+                    <span class="option-title">Merge both</span>
+                    <span class="option-count">Recommended, nothing is lost</span>
+                </button>
+                <button class="option" data-choice="cloud" type="button">
+                    <span class="option-title">Use cloud data</span>
+                    <span class="option-count">Replaces this device</span>
+                </button>
+                <button class="option" data-choice="local" type="button">
+                    <span class="option-title">Use this device's data</span>
+                    <span class="option-count">Replaces the cloud</span>
+                </button>
+            </div>
         </dialog>
 
         <dialog class="dialog dialog-list dialog-profiles" id="profiles-dialog" aria-labelledby="profiles-title">

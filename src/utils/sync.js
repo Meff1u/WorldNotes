@@ -16,8 +16,34 @@ export const execute = async (app) => {
 
     app.setSyncStatus = function (status) {
         app.cloud.status = status;
+
+        // Remembers that this device already synced with this account, so the first-sync question isn't asked again
+        if (status === "synced") {
+            app.cloud.lastSyncedAt = new Date().toISOString();
+            localStorage.setItem(syncedUserKey, app.cloud.user.id);
+        }
+
         app.onSyncStatus?.(status);
-    }
+    };
+
+    const syncedUserKey = `${app.constants.storageKey}-synced-user`;
+
+    app.isFirstSync = function () {
+        return localStorage.getItem(syncedUserKey) !== app.cloud.user.id;
+    };
+
+    app.forgetSyncedUser = function () {
+        localStorage.removeItem(syncedUserKey);
+    };
+
+    app.hasData = function (store) {
+        const profiles = Object.values(store.profiles);
+        return profiles.length > 1 || profiles.some((profile) => Object.keys(profile.countries).length || Object.keys(profile.groups).length);
+    };
+
+    app.syncNow = function () {
+        return queue(() => (sync.pending ? app.pushCloud() : app.pullCloud()));
+    };
 
     // Every network step runs one after another, so a push never overlaps a pull and reads stale data
     const queue = (task) => {
@@ -53,9 +79,9 @@ export const execute = async (app) => {
         if (sync.channel) (await app.getCloudClient()).removeChannel(sync.channel);
         sync.channel = null;
         app.setSyncStatus("off");
-    }
+    };
 
-    // Downloads the cloud copy and merges it into device's data; pushes back if this device had something new
+    // Downloads the cloud copy and merges it into this device's data; pushes back if this device had something new
     app.pullCloud = async function () {
         if (!sync.running) return;
         app.setSyncStatus("syncing");
@@ -71,7 +97,18 @@ export const execute = async (app) => {
 
         sync.remoteUpdatedAt = row.updated_at;
         const remote = app.normalizeStore(row.data);
-        const merged = sync.replace ? app.store : app.mergeStores(app.store, remote);
+
+        // The first time this device meets this account and both sides hold data, the user decides what happens
+        const choice =
+            app.isFirstSync() && !sync.replace && app.hasData(app.store) && app.hasData(remote) ? await app.chooseFirstSync(app.store, remote) : "merge";
+        if (choice === "local") sync.replace = true;
+
+        const merged =
+            choice === "cloud"
+                ? app.normalizeStore({ ...remote, settings: app.store.settings })
+                : sync.replace
+                  ? app.store
+                  : app.mergeStores(app.store, remote);
 
         if (JSON.stringify(merged) !== JSON.stringify(app.store)) app.applyMergedStore(merged);
         if (sync.replace || JSON.stringify(merged.profiles) !== JSON.stringify(remote.profiles)) sync.pending = true;
@@ -80,7 +117,7 @@ export const execute = async (app) => {
         app.setSyncStatus("synced");
     };
 
-    // Uploads only if the cloud still holds the version this device last saw; otherwise anotehr device wrote first,
+    // Uploads only if the cloud still holds the version this device last saw; otherwise another device wrote first,
     // so its changes are pulled and merged before trying again
     app.pushCloud = async function () {
         if (!sync.running || !sync.pending) return;
@@ -108,7 +145,7 @@ export const execute = async (app) => {
         app.setSyncStatus("synced");
     };
 
-    // Called by saveState: waits for a pause in typing so a note isn't updated latter by latter
+    // Called by saveState: waits for a pause in typing so a note isn't updated letter by letter
     app.scheduleCloudPush = function () {
         if (!sync.running) return;
 

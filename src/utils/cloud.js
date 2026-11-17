@@ -68,4 +68,15 @@ export const execute = async (app) => {
         if (error) throw error;
         app.cloud.user = null;
     };
+
+    // Runs delete_account() in the database, which removes the user and through the foreign key, their stored data;
+    // the local session is cleared afterwards because the server one no longer exists
+    app.deleteCloudAccount = async function () {
+        const { error } = await (await app.getCloudClient()).rpc("delete_account");
+        if (error) throw error;
+
+        await (await app.getCloudClient()).auth.signOut({ scope: "local" });
+        app.forgetSyncedUser?.();
+        app.cloud.user = null;
+    };
 };
