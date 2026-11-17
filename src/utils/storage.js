@@ -2,60 +2,102 @@ import countryNames from "../libs/countryNames.json";
 
 export const execute = async (app) => {
     const timestamp = (value) => (Number.isNaN(Date.parse(value)) ? new Date().toISOString() : value);
+    const isObject = (value) => value && typeof value === "object" && !Array.isArray(value);
 
-    app.createEmptyState = function () {
+    app.createId = function (prefix) {
+        return `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    };
+
+    app.createEmptyProfile = function (name = app.constants.defaultProfileName) {
+        const now = new Date().toISOString();
+        return { name, createdAt: now, updatedAt: now, countries: {}, groups: {} };
+    };
+
+    app.createEmptyStore = function () {
+        const id = app.createId("p");
         return {
             version: app.constants.dataVersion,
             settings: { theme: document.documentElement.dataset.theme || "dark" },
-            countries: {},
-            groups: {},
+            activeProfile: id,
+            profiles: { [id]: app.createEmptyProfile() },
         };
+    };
+
+    // app.store holds everything that is saved, app.state is the active profile inside it
+    app.useStore = function (store) {
+        app.store = store;
+        app.state = store.profiles[store.activeProfile];
     };
 
     app.loadState = function () {
         try {
             const raw = localStorage.getItem(app.constants.storageKey);
-            app.state = raw ? app.normalizeState(JSON.parse(raw)) : app.createEmptyState();
-            if (raw && JSON.stringify(app.state) !== raw) app.saveState();
+            app.useStore(raw ? app.normalizeStore(JSON.parse(raw)) : app.createEmptyStore());
+            if (raw && JSON.stringify(app.store) !== raw) app.saveState();
         } catch (error) {
             console.error("Failed to read saved state:", error);
-            app.state = app.createEmptyState();
+            app.useStore(app.createEmptyStore());
         }
     };
 
     app.saveState = function () {
         try {
-            localStorage.setItem(app.constants.storageKey, JSON.stringify(app.state));
+            app.state.updatedAt = new Date().toISOString();
+            localStorage.setItem(app.constants.storageKey, JSON.stringify(app.store));
+            app.updateStorageUsage?.();
             return true;
         } catch (error) {
             console.error("Failed to save state:", error);
-            app.toast("Could not save to browser storage", "error");
+            app.toast("Browser storage is full or blocked, the last change was not saved", "error");
             return false;
         }
     };
 
-    // Throws on malformed data so import can report it, drops unknown fields silently
-    app.normalizeState = function (data) {
-        const isObject = (value) => value && typeof value === "object" && !Array.isArray(value);
-
+    // Accepts the current multi-profile format and older single-profile saves or exports (version 1 and 2)
+    app.normalizeStore = function (data) {
         if (!isObject(data)) throw new Error("Data is not an object");
+        if (data.profiles && !isObject(data.profiles)) throw new Error("\"profiles\" must be an object");
+
+        const store = app.createEmptyStore();
+        store.profiles = {};
+
+        if (["light", "dark"].includes(data.settings?.theme)) store.settings.theme = data.settings.theme;
+
+        if (data.profiles) {
+            for (const [id, profile] of Object.entries(data.profiles)) {
+                if (isObject(profile)) store.profiles[id] = app.normalizeProfile(profile);
+            }
+        } else {
+            const id = app.createId("p");
+            store.profiles[id] = app.normalizeProfile(data);
+        }
+
+        const ids = Object.keys(store.profiles);
+        if (!ids.length) throw new Error("No profiles found");
+
+        store.activeProfile = store.profiles[data.activeProfile] ? data.activeProfile : ids[0];
+        return store;
+    };
+
+    app.normalizeProfile = function (data) {
         if (data.countries && !isObject(data.countries)) throw new Error("\"countries\" must be an object");
         if (data.groups && !isObject(data.groups)) throw new Error("\"groups\" must be an object");
 
-        const state = app.createEmptyState();
-
-        if (["light", "dark"].includes(data.settings?.theme)) state.settings.theme = data.settings.theme;
+        const name = typeof data.name === "string" ? data.name.trim().slice(0, app.constants.profileNameLength) : "";
+        const profile = app.createEmptyProfile(name || app.constants.defaultProfileName);
+        profile.createdAt = timestamp(data.createdAt);
+        profile.updatedAt = timestamp(data.updatedAt);
 
         for (const [id, group] of Object.entries(data.groups || {})) {
-            const name = typeof group?.name === "string" ? group.name.trim().slice(0, app.constants.groupNameLength) : "";
-            if (!name) continue;
+            const groupName = typeof group?.name === "string" ? group.name.trim().slice(0, app.constants.groupNameLength) : "";
+            if (!groupName) continue;
 
             const members = (Array.isArray(group.members) ? group.members : [])
                 .filter((member) => typeof member === "string")
                 .map((member) => countryNames[member] ?? member);
 
-            state.groups[id] = {
-                name,
+            profile.groups[id] = {
+                name: groupName,
                 color: app.isHexColor(group.color) ? group.color.toLowerCase() : app.constants.palette[0],
                 note: typeof group.note === "string" ? group.note : "",
                 members: [...new Set(members)],
@@ -68,18 +110,18 @@ export const execute = async (app) => {
         for (const [savedName, entry] of Object.entries(data.countries || {})) {
             if (!isObject(entry)) continue;
 
-            const name = countryNames[savedName] ?? savedName;
-            if (name !== savedName && data.countries[name]) continue;
+            const countryName = countryNames[savedName] ?? savedName;
+            if (countryName !== savedName && data.countries[countryName]) continue;
 
             const note = typeof entry.note === "string" ? entry.note : "";
             const color = app.isHexColor(entry.color) ? entry.color.toLowerCase() : null;
-            const colorSource = state.groups[entry.colorSource]?.members.includes(name) ? entry.colorSource : null;
+            const colorSource = profile.groups[entry.colorSource]?.members.includes(countryName) ? entry.colorSource : null;
             if (!note.trim() && !color && !colorSource) continue;
 
-            state.countries[name] = { note, color, colorSource, updatedAt: timestamp(entry.updatedAt) };
+            profile.countries[countryName] = { note, color, colorSource, updatedAt: timestamp(entry.updatedAt) };
         }
 
-        return state;
+        return profile;
     };
 
     app.getEntry = function (name) {
@@ -110,13 +152,15 @@ export const execute = async (app) => {
         app.updateStats();
     };
 
-    app.getStateSummary = function () {
-        const entries = Object.values(app.state.countries);
+    app.getProfileSummary = function (profile = app.state) {
+        const entries = Object.entries(profile.countries);
+        const colorOf = ([, entry]) => (entry.colorSource && profile.groups[entry.colorSource] ? profile.groups[entry.colorSource].color : entry.color);
+
         return {
             entries: entries.length,
-            notes: entries.filter((entry) => entry.note.trim()).length,
-            colored: Object.keys(app.state.countries).filter((name) => app.getCountryColor(name)).length,
-            groups: Object.keys(app.state.groups).length,
+            notes: entries.filter(([, entry]) => entry.note.trim()).length,
+            colored: entries.filter(colorOf).length,
+            groups: Object.keys(profile.groups).length,
         };
     };
 
@@ -125,10 +169,11 @@ export const execute = async (app) => {
     };
 
     app.updateStats = function () {
-        const { entries, notes, colored, groups } = app.getStateSummary();
+        const { entries, notes, colored, groups } = app.getProfileSummary();
         const parts = [app.plural(notes, "note"), `${colored} colored`];
         if (groups) parts.push(app.plural(groups, "group"));
 
-        document.getElementById("stats").textContent = entries || groups ? parts.join(" · ") : "Click a country to add a note";
+        const text = entries || groups ? parts.join(" · ") : "Click a country to add a note";
+        document.getElementById("stats").textContent = Object.keys(app.store.profiles).length > 1 ? `${app.state.name} · ${text}` : text;
     };
 };

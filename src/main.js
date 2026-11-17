@@ -17,7 +17,9 @@ async function init() {
     try {
         await loadUtils();
         app.loadState();
-        app.applyTheme(app.state.settings.theme);
+        app.applyTheme(app.store.settings.theme);
+        await new Promise((resolve) => setTimeout(resolve, 16));
+        app.measureStorageQuota();
         app.bindControls();
         app.bindPanel();
         await app.createGlobe(document.getElementById("globe"));

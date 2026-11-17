@@ -1,7 +1,11 @@
 export default {
     storageKey: "worldnotes",
-    dataVersion: 2,
+    dataVersion: 3,
     groupNameLength: 60,
+    profileNameLength: 40,
+    defaultProfileName: "My globe",
+    storageQuotaChars: 5 * 1024 * 1024,
+    storageProbe: { maxChars: 32 * 1024 * 1024, precisionChars: 16 * 1024 },
     countriesUrl: `${import.meta.env.BASE_URL}data/countries.json`,
     view: {
         initial: { lat: 30, lng: 15, altitude: 2 },

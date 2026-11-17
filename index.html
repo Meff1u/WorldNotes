@@ -42,6 +42,14 @@
             </button>
 
             <div class="settings-menu" id="settings-menu" role="menu" hidden>
+                <button class="menu-item" id="profile" role="menuitem">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="10" r="3" /><path d="M6.2 18.8a7 7 0 0 1 11.6 0" /></svg>
+                    <span>Profile</span>
+                    <span class="menu-value" id="profile-value"></span>
+                </button>
+
+                <div class="menu-separator" role="separator"></div>
+
                 <button class="menu-item" id="country-list" role="menuitem">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11" /><g fill="currentColor" stroke="none"><circle cx="4.5" cy="6" r="1.5" /><circle cx="4.5" cy="12" r="1.5" /><circle cx="4.5" cy="18" r="1.5" /></g></svg>
                     <span>Country list</span>
@@ -81,6 +89,14 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" /></svg>
                     <span>Factory reset</span>
                 </button>
+
+                <div class="storage-meter" id="storage-meter" role="meter" aria-label="Browser storage used by WorldNotes">
+                    <div class="storage-label">
+                        <span>Storage</span>
+                        <span id="storage-value"></span>
+                    </div>
+                    <div class="storage-track"><i id="storage-fill"></i></div>
+                </div>
             </div>
 
             <input id="import-file" type="file" accept="application/json,.json" hidden />
@@ -110,6 +126,30 @@
 
             <ul class="list-items" id="list-items" aria-label="Countries"></ul>
             <p class="list-empty" id="list-empty" hidden>No countries match your search</p>
+        </dialog>
+
+        <dialog class="dialog dialog-list dialog-profiles" id="profiles-dialog" aria-labelledby="profiles-title">
+            <div class="list-header">
+                <h2 id="profiles-title">Profiles</h2>
+                <button class="icon-button" id="profiles-close" title="Close" aria-label="Close profiles">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                </button>
+            </div>
+            <div class="list-controls">
+                <p class="hint">Each profile is its own globe with separate notes, colors and groups.</p>
+                <button class="button button-primary" id="profile-new">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                    New profile
+                </button>
+            </div>
+            <ul class="list-items" id="profiles-items" aria-label="Profiles"></ul>
+            <div class="profiles-storage">
+                <div class="storage-label">
+                    <span>Browser storage</span>
+                    <span id="profiles-storage-text"></span>
+                </div>
+                <div class="storage-track storage-segments" id="profiles-storage-bar"></div>
+            </div>
         </dialog>
 
         <dialog class="dialog dialog-list" id="groups-dialog" aria-label="Groups">

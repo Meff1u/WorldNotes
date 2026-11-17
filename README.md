@@ -9,14 +9,15 @@ Interactive 3D globe for keeping notes about countries. Live at https://meff1u.g
 - **Surface colors**: paint a country with one of 12 preset colors or any custom color
 - **Selection highlight**: the selected country is raised, lit up and outlined; very small countries also get a pulsing marker so they're easy to spot
 - **Groups**: collect countries into named groups with their own color and note; a country can belong to many groups
+- **Profiles**: keep several separate globes, each with its own notes, colors and groups, and switch between them
 - **Hover tooltips** showing the country name, its groups and a preview of its note
 - **Search** to find a country by name and fly the camera to it, ignoring diacritics (`aland` finds Åland Islands)
 - **Country list** with search by name or note and filters (with note, without note, colored, by group)
 - **Random country** picker: any country, one without a note, one you've already written about, or one from a group
-- **Import and export** of all notes, colors and settings as a JSON file
+- **Import and export** of all profiles, notes, colors and settings as a JSON file
 - **Light and dark theme**, defaulting to your system preference
-- **Factory reset** to wipe all notes and settings, with a confirmation step
-- **Local storage**: everything is kept in your browser, no account or server needed
+- **Factory reset** to wipe all profiles, notes and settings, with a confirmation step
+- **Local storage**: everything is kept in your browser, no account or server needed, with a meter showing how much of the browser's storage is used
 - **Mobile friendly**: touch controls and a bottom sheet panel on small screens
 
 ## How to use
@@ -50,6 +51,16 @@ Groups collect countries under one name, for example "Visited in 2024" or "Bucke
 - **Manage groups** in **Groups** in the settings menu: create, rename, change the color, write the group note, see and remove member countries, or delete the group. Deleting a group keeps all country notes, and countries that used its color go back to their own
 - **Show on globe** in a group highlights its countries in the group color, fades the rest of the map and moves the camera to fit them all. Close the banner at the top (or press `Esc`) to go back to the normal view
 
+### Profiles
+
+A profile is a separate globe with its own notes, colors and groups.
+
+- **Profile** at the top of the settings menu shows the active profile and opens the profile manager
+- **New profile** creates an empty globe, switches to it and lets you name it right away
+- Click a profile to **switch** to it; the globe reloads with that profile's data
+- The pencil **renames** a profile (`Enter` saves, `Esc` cancels), the bin **deletes** it after a confirmation. The last remaining profile can't be deleted
+- Each profile shows its number of notes, groups and how much storage it takes. With more than one profile, the counter at the bottom of the screen starts with the active profile's name
+
 ### Keyboard shortcuts
 
 | Key | Action |
@@ -63,44 +74,56 @@ Groups collect countries under one name, for example "Visited in 2024" or "Bucke
 
 The gear icon in the top right corner opens the settings menu:
 
+- **Profile** opens the profile manager (see above)
 - **Country list** shows every country with its color and a preview of its note. Search matches both names and note text, and the filters narrow it down to countries **with a note**, **without a note** or **colored**, each with a live count. Once you have groups, a dropdown limits the list to one group. Pick a country (click or `↑` `↓` + `Enter`) to close the list and fly to it
 - **Groups** opens the group manager (see above)
 - **Random country** opens a picker: **Any country**, **Without a note**, **With a note**, or any of your groups. Each option shows how many countries it can pick from, and empty ones are disabled. The globe flies to the drawn country and opens its panel
 - **Theme** switches between light and dark
 - **Import notes** and **Export notes** (see below)
-- **Factory reset** deletes all notes, colors and settings. A confirmation window shows how much will be removed and lets you export a backup first. This cannot be undone
+- **Factory reset** deletes all profiles, notes, colors and settings and starts over with one empty profile. A confirmation window shows how much will be removed and lets you export a backup first. This cannot be undone
+- **Storage** at the bottom of the menu shows how much of the browser's storage WorldNotes uses. The bar turns amber at 70% and red at 90%
 
 ### Backup and transfer
 
 Notes live in your browser's local storage, so they are tied to one browser on one device. Use the settings menu to move them elsewhere:
 
-- **Export notes** downloads `worldnotes-YYYY-MM-DD.json` with all notes, colors, groups and the theme
-- **Import notes** loads such a file. If you already have data, you'll be asked before it is replaced.
+- **Export notes** downloads `worldnotes-YYYY-MM-DD.json` with every profile, its notes, colors and groups, and the theme
+- **Import notes** loads such a file and replaces all current data. If you already have data, you'll be asked first.
+
+Local storage has a fixed limit per website (origin), usually about 5 million characters, which is around 10 MB in Chrome and Firefox and less in Safari. Browsers don't report this limit, so on the first visit WorldNotes measures it once by briefly writing test data until the browser refuses it (this takes a fraction of a second) and remembers the result for that browser. On GitHub Pages the limit is shared by every project under the same `username.github.io` address; the measurement accounts for what other projects already use, while the meter itself shows only what WorldNotes saves.
 
 The file format:
 
 ```json
 {
     "app": "WorldNotes",
-    "version": 2,
     "exportedAt": "2026-11-17T09:12:44.201Z",
+    "version": 3,
     "settings": { "theme": "dark" },
-    "countries": {
-        "Poland": {
-            "note": "Visited Kraków in 2024",
-            "color": "#ef4444",
-            "colorSource": "gm3k2x9a1b",
-            "updatedAt": "2026-11-16T20:43:39.524Z"
-        }
-    },
-    "groups": {
-        "gm3k2x9a1b": {
-            "name": "Visited 2024",
-            "color": "#3b82f6",
-            "note": "Summer road trip",
-            "members": ["Poland", "Germany", "France"],
-            "createdAt": "2026-11-17T09:02:10.000Z",
-            "updatedAt": "2026-11-17T09:05:31.000Z"
+    "activeProfile": "pmwk1a2b3c4",
+    "profiles": {
+        "pmwk1a2b3c4": {
+            "name": "My globe",
+            "createdAt": "2026-11-16T20:40:00.000Z",
+            "updatedAt": "2026-11-17T09:12:40.000Z",
+            "countries": {
+                "Poland": {
+                    "note": "Visited Kraków in 2024",
+                    "color": "#ef4444",
+                    "colorSource": "gm3k2x9a1b",
+                    "updatedAt": "2026-11-16T20:43:39.524Z"
+                }
+            },
+            "groups": {
+                "gm3k2x9a1b": {
+                    "name": "Visited 2024",
+                    "color": "#3b82f6",
+                    "note": "Summer road trip",
+                    "members": ["Poland", "Germany", "France"],
+                    "createdAt": "2026-11-17T09:02:10.000Z",
+                    "updatedAt": "2026-11-17T09:05:31.000Z"
+                }
+            }
         }
     }
 }

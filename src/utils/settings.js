@@ -93,7 +93,7 @@ export const execute = async (app) => {
     };
 
     app.updateThemeLabel = function () {
-        elements["theme-value"].textContent = app.state.settings.theme === "dark" ? "Dark" : "Light";
+        elements["theme-value"].textContent = app.store.settings.theme === "dark" ? "Dark" : "Light";
     };
 
     app.getRandomPools = function () {
@@ -150,13 +150,19 @@ export const execute = async (app) => {
 
     app.openResetDialog = function () {
         app.flushNote();
+        app.flushGroupNote();
 
-        const { entries, notes, colored, groups } = app.getStateSummary();
-        const parts = [app.plural(notes, "note"), app.plural(colored, "color")];
-        if (groups) parts.push(app.plural(groups, "group"));
+        const profiles = Object.values(app.store.profiles);
+        const totals = profiles.map((profile) => app.getProfileSummary(profile)).reduce(
+            (sum, summary) => ({ notes: sum.notes + summary.notes, colored: sum.colored + summary.colored, groups: sum.groups + summary.groups, entries: sum.entries + summary.entries }),
+            { notes: 0, colored: 0, groups: 0, entries: 0 },
+        );
+        const parts = [app.plural(profiles.length, "profile"), app.plural(totals.notes, "note"), app.plural(totals.colored, "color")];
+        if (totals.groups) parts.push(app.plural(totals.groups, "group"));
 
-        elements["reset-summary"].textContent = entries || groups ? parts.join(", ").replace(/, ([^,]*)$/, " and $1") : "all saved data";
-        elements["reset-export"].disabled = !entries && !groups;
+        const hasData = totals.entries || totals.groups || profiles.length > 1;
+        elements["reset-summary"].textContent = hasData ? parts.join(", ").replace(/, ([^,]*)$/, " and $1") : "all saved data";
+        elements["reset-export"].disabled = !hasData;
         elements["reset-dialog"].showModal();
     };
 
@@ -170,10 +176,12 @@ export const execute = async (app) => {
             console.error("Failed to clear storage:", error);
         }
 
-        app.state = app.createEmptyState();
+        app.useStore(app.createEmptyStore());
         app.applyTheme(matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
         app.updateThemeLabel();
         app.updateStats();
-        app.toast("All notes and settings were reset", "success");
+        app.renderProfileLabel();
+        app.updateStorageUsage();
+        app.toast("All profiles, notes and settings were reset", "success");
     };
 };

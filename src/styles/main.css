@@ -1036,6 +1036,150 @@ svg {
     display: none;
 }
 
+.storage-meter {
+    margin: 5px 6px 2px;
+    padding: 9px 4px 5px;
+    border-top: 1px solid var(--border);
+}
+
+.storage-label {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.storage-track {
+    display: flex;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--border);
+}
+
+.storage-track i {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s var(--ease);
+}
+
+.storage-meter[data-level="warning"] .storage-track i,
+.storage-segments[data-level="warning"] i.active {
+    background: #f59e0b;
+}
+
+.storage-meter[data-level="danger"] .storage-track i,
+.storage-segments[data-level="danger"] i.active {
+    background: var(--danger);
+}
+
+.storage-meter[data-level="danger"] #storage-value {
+    color: var(--danger);
+}
+
+.storage-segments {
+    height: 6px;
+    border-radius: 3px;
+}
+
+.storage-segments i {
+    min-width: 2px;
+    background: var(--text-muted);
+    opacity: 0.6;
+}
+
+.storage-segments i + i {
+    border-left: 1px solid var(--surface-solid);
+}
+
+.storage-segments i.active {
+    background: var(--accent);
+    opacity: 1;
+}
+
+.dialog.dialog-profiles {
+    height: fit-content;
+    max-height: min(620px, calc(100dvh - 48px));
+}
+
+.dialog-profiles .list-items {
+    flex: 0 1 auto;
+}
+
+.dialog-profiles .list-controls .hint {
+    margin-top: -4px;
+}
+
+.dialog-profiles .list-controls .button {
+    align-self: flex-start;
+}
+
+.profiles-storage {
+    padding: 12px 20px 16px;
+    border-top: 1px solid var(--border);
+}
+
+.profile-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-right: 4px;
+}
+
+.profile-row .icon-button {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.profile-row .icon-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+.profile-row .icon-button.danger:not(:disabled):hover {
+    color: var(--danger);
+}
+
+.profile-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-row.active .profile-main {
+    background: var(--accent-soft);
+    cursor: default;
+}
+
+.profile-radio {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--text-muted);
+}
+
+.profile-row.active .profile-radio {
+    box-shadow: inset 0 0 0 1.5px var(--accent), inset 0 0 0 4.5px var(--surface-solid);
+    background: var(--accent);
+}
+
+.profile-name-input {
+    flex: 1;
+    margin: 4px 6px;
+}
+
+.menu-value {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .zoom-controls {
     position: fixed;
     left: 16px;
