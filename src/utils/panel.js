@@ -5,7 +5,7 @@ export const execute = async (app) => {
 
     app.bindPanel = function () {
         for (const id of [
-            "panel", "panel-title", "panel-close", "swatches", "color-reset", "color-mode", "group-colors", "note", "save-status", "updated", "entry-clear",
+            "panel", "panel-label", "panel-title", "panel-close", "swatches", "color-reset", "color-mode", "group-colors", "note", "save-status", "updated", "entry-clear",
             "country-groups", "group-add", "group-create", "group-create-name", "group-create-cancel",
         ]) {
             elements[id] = document.getElementById(id);
@@ -211,6 +211,7 @@ export const execute = async (app) => {
     app.openPanel = function (country) {
         app.flushNote();
 
+        elements["panel-label"].textContent = country.label;
         elements["panel-title"].textContent = country.name;
         elements["save-status"].textContent = "";
         elements["group-create"].hidden = true;

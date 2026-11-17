@@ -2,6 +2,7 @@ import Globe from "globe.gl";
 import { BufferAttribute, BufferGeometry, Color, DoubleSide, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial } from "three";
 import { feature } from "topojson-client";
 import { geoArea, geoBounds, geoCentroid, geoContains } from "d3-geo";
+import countryLabels from "../libs/countryLabels.json";
 
 export const execute = async (app) => {
     const radius = 100;
@@ -28,7 +29,7 @@ export const execute = async (app) => {
                 });
 
                 const name = country.properties.name;
-                return { name, searchName: app.normalizeText(name), geometry, parts, view: app.getCountryView(geometry, parts) };
+                return { name, label: countryLabels[name] ?? "Country", searchName: app.normalizeText(name), geometry, parts, view: app.getCountryView(geometry, parts) };
             })
             .sort((a, b) => a.name.localeCompare(b.name));
     };
