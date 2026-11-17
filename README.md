@@ -82,6 +82,7 @@ The gear icon in the top right corner opens the settings menu:
 - **Import notes** and **Export notes** (see below)
 - **Factory reset** deletes all profiles, notes, colors and settings and starts over with one empty profile. A confirmation window shows how much will be removed and lets you export a backup first. This cannot be undone
 - **Storage** at the bottom of the menu shows how much of the browser's storage WorldNotes uses. The bar turns amber at 70% and red at 90%
+- **Cloud sync** (optional) signs you in with Google or an email link and keeps your profiles, notes and groups in step across devices. Your data sill lives in the browser first; signing out keeps it. The first time a device connects to an account that already has data, you choose whether to merge, use the cloud copy or use this device's data. **Delete account and cloud data** removes everything stored in the cloud. See the [privacy policy](https://meff1u.github.io/WorldNotes/privacy.html).
 
 ### Backup and transfer
 
