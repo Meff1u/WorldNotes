@@ -7,5 +7,7 @@
     { "parent": "Netherlands", "name": "Caribbean Netherlands", "boxes": [[-69, 11.8, -62.7, 18]] },
     { "parent": "Norway", "name": "Svalbard and Jan Mayen", "boxes": [[5, 73.5, 36, 81.5], [-10, 70.5, -7, 71.5]] },
     { "parent": "Norway", "name": "Bouvet Island", "boxes": [[2.5, -55, 4, -54]] },
-    { "parent": "New Zealand", "name": "Tokelau", "boxes": [[-173.5, -10, -170.5, -8]] }
+    { "parent": "New Zealand", "name": "Tokelau", "boxes": [[-173.5, -10, -170.5, -8]] },
+    { "parent": "Australian Indian Ocean Territories", "name": "Christmas Island", "boxes": [[105, -11, 106.2, -10]] },
+    { "parent": "Australian Indian Ocean Territories", "name": "Cocos (Keeling) Islands", "boxes": [[96.5, -12.5, 97.2, -11.7]] }
 ]

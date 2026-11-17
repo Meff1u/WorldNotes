@@ -29,20 +29,24 @@ export const execute = async (app) => {
                 });
 
                 const name = country.properties.name;
-                return { name, label: countryLabels[name] ?? "Country", searchName: app.normalizeText(name), geometry, parts, view: app.getCountryView(geometry, parts) };
+                const view = app.getCountryView(geometry, parts, source.flat(2));
+                return { name, label: countryLabels[name] ?? "Country", searchName: app.normalizeText(name), geometry, parts, view };
             })
             .sort((a, b) => a.name.localeCompare(b.name));
     };
 
     // Large countries center on their main landmass so overseas territories don't drag the camera away,
     // tiny archipelagos center on the whole group and get a marker since their islands are barely visible
-    app.getCountryView = function (geometry, parts) {
+    app.getCountryView = function (geometry, parts, points) {
         const small = geoArea(geometry) < app.constants.view.smallArea;
         const target = small ? geometry : parts.reduce((best, part) => (geoArea(part.polygon) > geoArea(best.polygon) ? part : best)).polygon;
 
-        const [lng, lat] = geoCentroid(target);
+        let [lng, lat] = geoCentroid(target);
         const [[west, south], [east, north]] = geoBounds(target);
-        const span = Math.max(north - south, (east - west + 360) % 360);
+        const span = Math.max(north - south, (east - west + 360) % 360) || 0;
+
+        // A shape with no area (Vatican City is a line in the source data) has no centroid, so its raw points are used
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) [lng, lat] = geoCentroid({ type: "MultiPoint", coordinates: points });
 
         return { lat, lng, span, small, altitude: Math.min(2.2, Math.max(0.15, 0.12 + span * 0.04)) };
     };
