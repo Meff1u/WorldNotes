@@ -4,7 +4,7 @@ Interactive 3D globe for keeping notes about countries. Live at https://meff1u.g
 
 ## Features
 
-- **3D globe** with all 255 countries and territories from Natural Earth 1:10m, including small island nations like Tuvalu, Nauru or the Maldives
+- **3D globe** with all 264 countries and territories from Natural Earth 1:10m, including small island nations like Tuvalu, Nauru or the Maldives and overseas regions such as Guadeloupe, Martinique or Réunion shown on their own
 - **Country notes**: write a note for any country, it saves automatically as you type
 - **Surface colors**: paint a country with one of 12 preset colors or any custom color
 - **Selection highlight**: the selected country is raised, lit up and outlined; very small countries also get a pulsing marker so they're easy to spot

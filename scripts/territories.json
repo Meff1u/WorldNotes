@@ -1,0 +1,11 @@
+[
+    { "parent": "France", "name": "French Guiana", "boxes": [[-55, 1.5, -51, 6.5]] },
+    { "parent": "France", "name": "Guadeloupe", "boxes": [[-62, 15.7, -60.8, 16.6]] },
+    { "parent": "France", "name": "Martinique", "boxes": [[-61.4, 14.3, -60.7, 15]] },
+    { "parent": "France", "name": "Réunion", "boxes": [[55, -21.6, 56, -20.7]] },
+    { "parent": "France", "name": "Mayotte", "boxes": [[44.8, -13.2, 45.4, -12.4]] },
+    { "parent": "Netherlands", "name": "Caribbean Netherlands", "boxes": [[-69, 11.8, -62.7, 18]] },
+    { "parent": "Norway", "name": "Svalbard and Jan Mayen", "boxes": [[5, 73.5, 36, 81.5], [-10, 70.5, -7, 71.5]] },
+    { "parent": "Norway", "name": "Bouvet Island", "boxes": [[2.5, -55, 4, -54]] },
+    { "parent": "New Zealand", "name": "Tokelau", "boxes": [[-173.5, -10, -170.5, -8]] }
+]
