@@ -24,6 +24,7 @@ async function init() {
         app.bindPanel();
         await app.createGlobe(document.getElementById("globe"));
         app.updateStats();
+        app.restoreCloudSession();
         app.log(`WorldNotes v${app.package.version} ready`);
     } catch (error) {
         console.error("Error during initialization:", error);
