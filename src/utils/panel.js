@@ -213,6 +213,7 @@ export const execute = async (app) => {
 
         elements["panel-label"].textContent = country.label;
         elements["panel-title"].textContent = country.name;
+        app.showFlag(country);
         elements["save-status"].textContent = "";
         elements["group-create"].hidden = true;
         app.renderPanelState(country.name);

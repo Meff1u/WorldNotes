@@ -22,6 +22,7 @@
   "homepage": "https://meff1u.github.io/WorldNotes/",
   "dependencies": {
     "d3-geo": "^3.1.2",
+    "flag-icons": "^7.6.0",
     "globe.gl": "^2.46.2",
     "three": "^0.187.0",
     "topojson-client": "^3.1.0"
