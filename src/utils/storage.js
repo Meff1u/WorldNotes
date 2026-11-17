@@ -55,6 +55,7 @@ export const execute = async (app) => {
             app.state.updatedAt = new Date().toISOString();
             localStorage.setItem(app.constants.storageKey, JSON.stringify(app.store));
             app.updateStorageUsage?.();
+            app.scheduleCloudPush?.();
             return true;
         } catch (error) {
             console.error("Failed to save state:", error);

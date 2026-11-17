@@ -1,5 +1,6 @@
 export default {
     storageKey: "worldnotes",
+    syncDelay: 2000,
     dataVersion: 3,
     groupNameLength: 60,
     profileNameLength: 40,

@@ -212,6 +212,7 @@ export const execute = async (app) => {
         }
 
         app.useStore(app.createEmptyStore());
+        app.replaceCloudOnNextSync?.();
         app.applyTheme(matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
         app.updateThemeLabel();
         app.updateStats();

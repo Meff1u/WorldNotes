@@ -33,6 +33,7 @@ export const execute = async (app) => {
             app.clearGroupHighlight();
             app.useStore(imported);
             app.saveState();
+            app.replaceCloudOnNextSync?.();
             app.applyTheme(imported.settings.theme);
             app.updateStats();
             app.renderProfileLabel();
