@@ -22,7 +22,9 @@ export const execute = async (app) => {
         try {
             const imported = app.normalizeStore(JSON.parse(await file.text()));
             const current = app.store.profiles;
-            const hasData = Object.keys(current).length > 1 || Object.values(current).some((profile) => Object.keys(profile.countries).length || Object.keys(profile.groups).length);
+            const hasData =
+                Object.keys(current).length > 1 ||
+                Object.values(current).some((profile) => Object.keys(profile.countries).length || Object.keys(profile.groups).length);
 
             if (hasData && !confirm(`Replace all your data (${describe(app.store)}) with ${describe(imported)} from "${file.name}"?`)) return;
 
@@ -35,7 +37,9 @@ export const execute = async (app) => {
             app.updateStats();
             app.renderProfileLabel();
 
-            const unknown = Object.values(imported.profiles).flatMap((profile) => Object.keys(profile.countries)).filter((name) => !app.findCountry(name)).length;
+            const unknown = Object.values(imported.profiles)
+                .flatMap((profile) => Object.keys(profile.countries))
+                .filter((name) => !app.findCountry(name)).length;
             app.toast(`Imported ${describe(imported)}${unknown ? ` (${unknown} not on the map)` : ""}`, "success");
         } catch (error) {
             console.error("Import failed:", error);

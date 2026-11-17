@@ -2,7 +2,27 @@ export const execute = async (app) => {
     const elements = {};
 
     app.bindSettings = function () {
-        for (const id of ["settings", "settings-toggle", "settings-menu", "random", "random-dialog", "random-cancel", "random-groups", "random-group-options", "theme", "theme-value", "import", "export", "import-file", "factory-reset", "reset-dialog", "reset-summary", "reset-export", "reset-cancel", "reset-confirm"]) {
+        for (const id of [
+            "settings",
+            "settings-toggle",
+            "settings-menu",
+            "random",
+            "random-dialog",
+            "random-cancel",
+            "random-groups",
+            "random-group-options",
+            "theme",
+            "theme-value",
+            "import",
+            "export",
+            "import-file",
+            "factory-reset",
+            "reset-dialog",
+            "reset-summary",
+            "reset-export",
+            "reset-cancel",
+            "reset-confirm",
+        ]) {
             elements[id] = document.getElementById(id);
         }
 
@@ -123,17 +143,19 @@ export const execute = async (app) => {
         const pools = app.getRandomPools();
         const groups = app.getGroups();
 
-        elements["random-group-options"].replaceChildren(...groups.map((group) => {
-            const option = Object.assign(document.createElement("button"), { className: "option" });
-            const title = Object.assign(document.createElement("span"), { className: "option-title" });
-            const dot = Object.assign(document.createElement("i"), { className: "list-swatch" });
+        elements["random-group-options"].replaceChildren(
+            ...groups.map((group) => {
+                const option = Object.assign(document.createElement("button"), { className: "option" });
+                const title = Object.assign(document.createElement("span"), { className: "option-title" });
+                const dot = Object.assign(document.createElement("i"), { className: "list-swatch" });
 
-            dot.style.setProperty("--swatch", group.color);
-            title.append(dot, document.createTextNode(group.name));
-            option.dataset.pool = `group:${group.id}`;
-            option.append(title, Object.assign(document.createElement("span"), { className: "option-count" }));
-            return option;
-        }));
+                dot.style.setProperty("--swatch", group.color);
+                title.append(dot, document.createTextNode(group.name));
+                option.dataset.pool = `group:${group.id}`;
+                option.append(title, Object.assign(document.createElement("span"), { className: "option-count" }));
+                return option;
+            }),
+        );
         elements["random-groups"].hidden = !groups.length;
 
         for (const option of elements["random-dialog"].querySelectorAll(".option")) {
@@ -159,10 +181,17 @@ export const execute = async (app) => {
         app.flushGroupNote();
 
         const profiles = Object.values(app.store.profiles);
-        const totals = profiles.map((profile) => app.getProfileSummary(profile)).reduce(
-            (sum, summary) => ({ notes: sum.notes + summary.notes, colored: sum.colored + summary.colored, groups: sum.groups + summary.groups, entries: sum.entries + summary.entries }),
-            { notes: 0, colored: 0, groups: 0, entries: 0 },
-        );
+        const totals = profiles
+            .map((profile) => app.getProfileSummary(profile))
+            .reduce(
+                (sum, summary) => ({
+                    notes: sum.notes + summary.notes,
+                    colored: sum.colored + summary.colored,
+                    groups: sum.groups + summary.groups,
+                    entries: sum.entries + summary.entries,
+                }),
+                { notes: 0, colored: 0, groups: 0, entries: 0 },
+            );
         const parts = [app.plural(profiles.length, "profile"), app.plural(totals.notes, "note"), app.plural(totals.colored, "color")];
         if (totals.groups) parts.push(app.plural(totals.groups, "group"));
 

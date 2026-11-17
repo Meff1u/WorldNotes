@@ -41,23 +41,25 @@ export const execute = async (app) => {
         let active = 0;
 
         const render = () => {
-            list.replaceChildren(...results.map((country, index) => {
-                const item = Object.assign(document.createElement("li"), { className: index === active ? "active" : "" });
-                const entry = app.getEntry(country.name);
+            list.replaceChildren(
+                ...results.map((country, index) => {
+                    const item = Object.assign(document.createElement("li"), { className: index === active ? "active" : "" });
+                    const entry = app.getEntry(country.name);
 
-                item.append(Object.assign(document.createElement("span"), { textContent: country.name }));
-                if (entry) {
-                    const dot = Object.assign(document.createElement("i"), { className: "search-dot" });
-                    dot.style.setProperty("--dot", app.getCountryColor(country.name) || app.getThemeColors().accent);
-                    item.append(dot);
-                }
+                    item.append(Object.assign(document.createElement("span"), { textContent: country.name }));
+                    if (entry) {
+                        const dot = Object.assign(document.createElement("i"), { className: "search-dot" });
+                        dot.style.setProperty("--dot", app.getCountryColor(country.name) || app.getThemeColors().accent);
+                        item.append(dot);
+                    }
 
-                item.addEventListener("mousedown", (event) => {
-                    event.preventDefault();
-                    choose(country);
-                });
-                return item;
-            }));
+                    item.addEventListener("mousedown", (event) => {
+                        event.preventDefault();
+                        choose(country);
+                    });
+                    return item;
+                }),
+            );
             list.hidden = !results.length;
         };
 
@@ -72,12 +74,13 @@ export const execute = async (app) => {
         input.addEventListener("input", () => {
             const query = app.normalizeText(input.value.trim());
             active = 0;
-            results = query && app.countries
-                ? app.countries
-                    .filter((country) => country.searchName.includes(query))
-                    .sort((a, b) => a.searchName.indexOf(query) - b.searchName.indexOf(query))
-                    .slice(0, 8)
-                : [];
+            results =
+                query && app.countries
+                    ? app.countries
+                          .filter((country) => country.searchName.includes(query))
+                          .sort((a, b) => a.searchName.indexOf(query) - b.searchName.indexOf(query))
+                          .slice(0, 8)
+                    : [];
             render();
         });
 

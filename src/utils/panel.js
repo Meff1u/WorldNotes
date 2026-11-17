@@ -5,8 +5,23 @@ export const execute = async (app) => {
 
     app.bindPanel = function () {
         for (const id of [
-            "panel", "panel-label", "panel-title", "panel-close", "swatches", "color-reset", "color-mode", "group-colors", "note", "save-status", "updated", "entry-clear",
-            "country-groups", "group-add", "group-create", "group-create-name", "group-create-cancel",
+            "panel",
+            "panel-label",
+            "panel-title",
+            "panel-close",
+            "swatches",
+            "color-reset",
+            "color-mode",
+            "group-colors",
+            "note",
+            "save-status",
+            "updated",
+            "entry-clear",
+            "country-groups",
+            "group-add",
+            "group-create",
+            "group-create-name",
+            "group-create-cancel",
         ]) {
             elements[id] = document.getElementById(id);
         }
@@ -161,16 +176,18 @@ export const execute = async (app) => {
         elements["color-reset"].hidden = groupMode;
         elements["color-reset"].disabled = !entry?.color;
 
-        elements["group-colors"].replaceChildren(...groups.map((group) => {
-            const option = Object.assign(document.createElement("button"), { className: "group-color-option", type: "button" });
-            const dot = Object.assign(document.createElement("i"), { className: "list-swatch" });
-            dot.style.setProperty("--swatch", group.color);
-            option.setAttribute("role", "radio");
-            option.setAttribute("aria-checked", String(entry?.colorSource === group.id));
-            option.append(dot, Object.assign(document.createElement("span"), { textContent: group.name }));
-            option.addEventListener("click", () => app.setColorMode("group", group.id));
-            return option;
-        }));
+        elements["group-colors"].replaceChildren(
+            ...groups.map((group) => {
+                const option = Object.assign(document.createElement("button"), { className: "group-color-option", type: "button" });
+                const dot = Object.assign(document.createElement("i"), { className: "list-swatch" });
+                dot.style.setProperty("--swatch", group.color);
+                option.setAttribute("role", "radio");
+                option.setAttribute("aria-checked", String(entry?.colorSource === group.id));
+                option.append(dot, Object.assign(document.createElement("span"), { textContent: group.name }));
+                option.addEventListener("click", () => app.setColorMode("group", group.id));
+                return option;
+            }),
+        );
 
         app.renderCountryGroups(name, groups);
 
@@ -181,23 +198,30 @@ export const execute = async (app) => {
     };
 
     app.renderCountryGroups = function (name, groups) {
-        elements["country-groups"].replaceChildren(...groups.map((group) => {
-            const chip = Object.assign(document.createElement("span"), { className: "group-chip" });
-            const open = Object.assign(document.createElement("button"), { className: "group-chip-name", type: "button", title: `Open "${group.name}"` });
-            const remove = Object.assign(document.createElement("button"), { className: "group-chip-remove", type: "button", title: `Remove from "${group.name}"` });
-            const dot = Object.assign(document.createElement("i"), { className: "list-swatch" });
+        elements["country-groups"].replaceChildren(
+            ...groups.map((group) => {
+                const chip = Object.assign(document.createElement("span"), { className: "group-chip" });
+                const open = Object.assign(document.createElement("button"), { className: "group-chip-name", type: "button", title: `Open "${group.name}"` });
+                const remove = Object.assign(document.createElement("button"), {
+                    className: "group-chip-remove",
+                    type: "button",
+                    title: `Remove from "${group.name}"`,
+                });
+                const dot = Object.assign(document.createElement("i"), { className: "list-swatch" });
 
-            dot.style.setProperty("--swatch", group.color);
-            open.append(dot, Object.assign(document.createElement("span"), { textContent: group.name }));
-            open.addEventListener("click", () => app.openGroups(group.id));
+                dot.style.setProperty("--swatch", group.color);
+                open.append(dot, Object.assign(document.createElement("span"), { textContent: group.name }));
+                open.addEventListener("click", () => app.openGroups(group.id));
 
-            remove.setAttribute("aria-label", remove.title);
-            remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>';
-            remove.addEventListener("click", () => app.removeFromGroup(group.id, name));
+                remove.setAttribute("aria-label", remove.title);
+                remove.innerHTML =
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>';
+                remove.addEventListener("click", () => app.removeFromGroup(group.id, name));
 
-            chip.append(open, remove);
-            return chip;
-        }));
+                chip.append(open, remove);
+                return chip;
+            }),
+        );
 
         const available = app.getGroups().filter((group) => !group.members.includes(name));
         const options = [new Option(groups.length ? "Add to another group…" : "Add to a group…", "", true, true)];

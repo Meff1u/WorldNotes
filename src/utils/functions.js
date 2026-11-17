@@ -12,7 +12,7 @@ export const execute = async (app) => {
     };
 
     app.escapeHtml = function (text) {
-        return String(text).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[char]);
+        return String(text).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
     };
 
     // Strips diacritics so "aland" finds "Åland"; letters like "ł" or "ø" don't decompose in Unicode and need a map
@@ -33,7 +33,13 @@ export const execute = async (app) => {
         const parse = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
         const a = parse(from);
         const b = parse(to);
-        return `#${a.map((value, i) => Math.round(value + (b[i] - value) * amount).toString(16).padStart(2, "0")).join("")}`;
+        return `#${a
+            .map((value, i) =>
+                Math.round(value + (b[i] - value) * amount)
+                    .toString(16)
+                    .padStart(2, "0"),
+            )
+            .join("")}`;
     };
 
     app.formatDate = function (iso) {

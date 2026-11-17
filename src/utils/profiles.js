@@ -72,7 +72,13 @@ export const execute = async (app) => {
         const chars = app.constants.storageKey.length + JSON.stringify(app.store).length;
         const quota = quotaChars * 2;
 
-        return { used: chars * 2, profiles, quota, quotaLabel: `${measured ? "" : "about "}${app.formatBytes(quota)}${capped ? "+" : ""}`, percent: (chars / quotaChars) * 100 };
+        return {
+            used: chars * 2,
+            profiles,
+            quota,
+            quotaLabel: `${measured ? "" : "about "}${app.formatBytes(quota)}${capped ? "+" : ""}`,
+            percent: (chars / quotaChars) * 100,
+        };
     };
 
     app.formatBytes = function (bytes) {
@@ -112,8 +118,17 @@ export const execute = async (app) => {
 
     app.bindProfiles = function () {
         for (const id of [
-            "profile", "profile-value", "profiles-dialog", "profiles-close", "profile-new", "profiles-items",
-            "profiles-storage-bar", "profiles-storage-text", "storage-meter", "storage-value", "storage-fill",
+            "profile",
+            "profile-value",
+            "profiles-dialog",
+            "profiles-close",
+            "profile-new",
+            "profiles-items",
+            "profiles-storage-bar",
+            "profiles-storage-text",
+            "storage-meter",
+            "storage-value",
+            "storage-fill",
         ]) {
             elements[id] = document.getElementById(id);
         }
@@ -151,86 +166,105 @@ export const execute = async (app) => {
         const usage = app.getStorageUsage();
         const single = profiles.length === 1;
 
-        elements["profiles-items"].replaceChildren(...profiles.map((profile) => {
-            const active = profile.id === app.store.activeProfile;
-            const { notes, groups } = app.getProfileSummary(profile);
-            const item = Object.assign(document.createElement("li"), { className: `profile-row${active ? " active" : ""}` });
-            const meta = [active ? "Active" : null, app.plural(notes, "note"), groups ? app.plural(groups, "group") : null, app.formatBytes(usage.profiles[profile.id])]
-                .filter(Boolean)
-                .join(" · ");
+        elements["profiles-items"].replaceChildren(
+            ...profiles.map((profile) => {
+                const active = profile.id === app.store.activeProfile;
+                const { notes, groups } = app.getProfileSummary(profile);
+                const item = Object.assign(document.createElement("li"), { className: `profile-row${active ? " active" : ""}` });
+                const meta = [
+                    active ? "Active" : null,
+                    app.plural(notes, "note"),
+                    groups ? app.plural(groups, "group") : null,
+                    app.formatBytes(usage.profiles[profile.id]),
+                ]
+                    .filter(Boolean)
+                    .join(" · ");
 
-            if (renaming === profile.id) {
-                const input = Object.assign(document.createElement("input"), { className: "input profile-name-input", value: profile.name, maxLength: app.constants.profileNameLength });
-                input.setAttribute("aria-label", "Profile name");
+                if (renaming === profile.id) {
+                    const input = Object.assign(document.createElement("input"), {
+                        className: "input profile-name-input",
+                        value: profile.name,
+                        maxLength: app.constants.profileNameLength,
+                    });
+                    input.setAttribute("aria-label", "Profile name");
 
-                const finish = (save) => {
-                    if (renaming !== profile.id) return;
-                    renaming = null;
-                    if (save) app.renameProfile(profile.id, input.value);
+                    const finish = (save) => {
+                        if (renaming !== profile.id) return;
+                        renaming = null;
+                        if (save) app.renameProfile(profile.id, input.value);
+                        app.renderProfiles();
+                    };
+
+                    input.addEventListener("keydown", (event) => {
+                        if (event.key === "Enter") finish(true);
+                        if (event.key === "Escape") {
+                            event.preventDefault();
+                            finish(false);
+                        }
+                    });
+                    input.addEventListener("blur", () => finish(true));
+
+                    item.append(input);
+                    requestAnimationFrame(() => {
+                        input.focus();
+                        input.select();
+                    });
+                    return item;
+                }
+
+                const main = Object.assign(document.createElement("button"), {
+                    className: "list-row profile-main",
+                    title: active ? "Active profile" : `Switch to ${profile.name}`,
+                });
+                const radio = Object.assign(document.createElement("i"), { className: "profile-radio" });
+                const text = Object.assign(document.createElement("span"), { className: "list-text" });
+
+                text.append(
+                    Object.assign(document.createElement("span"), { className: "list-name", textContent: profile.name }),
+                    Object.assign(document.createElement("span"), { className: "list-note", textContent: meta }),
+                );
+                main.append(radio, text);
+                main.setAttribute("aria-current", String(active));
+                main.addEventListener("click", () => {
+                    if (active) return;
+                    app.switchProfile(profile.id);
+                    app.closeDialog(elements["profiles-dialog"]);
+                });
+
+                const rename = app.createIconButton("Rename profile", '<path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z" /><path d="m13.5 7.5 3 3" />');
+                rename.addEventListener("click", () => {
+                    renaming = profile.id;
                     app.renderProfiles();
-                };
-
-                input.addEventListener("keydown", (event) => {
-                    if (event.key === "Enter") finish(true);
-                    if (event.key === "Escape") {
-                        event.preventDefault();
-                        finish(false);
-                    }
                 });
-                input.addEventListener("blur", () => finish(true));
 
-                item.append(input);
-                requestAnimationFrame(() => {
-                    input.focus();
-                    input.select();
+                const remove = app.createIconButton(
+                    single ? "The only profile can't be deleted" : "Delete profile",
+                    '<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />',
+                );
+                remove.classList.add("danger");
+                remove.disabled = single;
+                remove.addEventListener("click", () => {
+                    const summary = app.getProfileSummary(profile);
+                    const contents = [app.plural(summary.notes, "note"), app.plural(summary.groups, "group")].join(" and ");
+                    if (!confirm(`Delete the profile "${profile.name}" with ${contents}? This cannot be undone.`)) return;
+
+                    app.deleteProfile(profile.id);
+                    app.toast(`Deleted profile "${profile.name}"`, "success");
                 });
+
+                item.append(main, rename, remove);
                 return item;
-            }
+            }),
+        );
 
-            const main = Object.assign(document.createElement("button"), { className: "list-row profile-main", title: active ? "Active profile" : `Switch to ${profile.name}` });
-            const radio = Object.assign(document.createElement("i"), { className: "profile-radio" });
-            const text = Object.assign(document.createElement("span"), { className: "list-text" });
-
-            text.append(
-                Object.assign(document.createElement("span"), { className: "list-name", textContent: profile.name }),
-                Object.assign(document.createElement("span"), { className: "list-note", textContent: meta }),
-            );
-            main.append(radio, text);
-            main.setAttribute("aria-current", String(active));
-            main.addEventListener("click", () => {
-                if (active) return;
-                app.switchProfile(profile.id);
-                app.closeDialog(elements["profiles-dialog"]);
-            });
-
-            const rename = app.createIconButton("Rename profile", '<path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z" /><path d="m13.5 7.5 3 3" />');
-            rename.addEventListener("click", () => {
-                renaming = profile.id;
-                app.renderProfiles();
-            });
-
-            const remove = app.createIconButton(single ? "The only profile can't be deleted" : "Delete profile", '<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />');
-            remove.classList.add("danger");
-            remove.disabled = single;
-            remove.addEventListener("click", () => {
-                const summary = app.getProfileSummary(profile);
-                const contents = [app.plural(summary.notes, "note"), app.plural(summary.groups, "group")].join(" and ");
-                if (!confirm(`Delete the profile "${profile.name}" with ${contents}? This cannot be undone.`)) return;
-
-                app.deleteProfile(profile.id);
-                app.toast(`Deleted profile "${profile.name}"`, "success");
-            });
-
-            item.append(main, rename, remove);
-            return item;
-        }));
-
-        elements["profiles-storage-bar"].replaceChildren(...profiles.map((profile) => {
-            const segment = Object.assign(document.createElement("i"), { className: profile.id === app.store.activeProfile ? "active" : "" });
-            segment.style.width = `${(usage.profiles[profile.id] / usage.quota) * 100}%`;
-            segment.title = `${profile.name}: ${app.formatBytes(usage.profiles[profile.id])}`;
-            return segment;
-        }));
+        elements["profiles-storage-bar"].replaceChildren(
+            ...profiles.map((profile) => {
+                const segment = Object.assign(document.createElement("i"), { className: profile.id === app.store.activeProfile ? "active" : "" });
+                segment.style.width = `${(usage.profiles[profile.id] / usage.quota) * 100}%`;
+                segment.title = `${profile.name}: ${app.formatBytes(usage.profiles[profile.id])}`;
+                return segment;
+            }),
+        );
         elements["profiles-storage-bar"].dataset.level = app.getStorageLevel(usage.percent);
         elements["profiles-storage-text"].textContent = `${app.formatBytes(usage.used)} of ${usage.quotaLabel} · ${app.formatPercent(usage.percent)}`;
     };
@@ -287,9 +321,14 @@ export const execute = async (app) => {
         const ids = Object.keys(app.store.profiles);
         if (ids.length < 2 || !app.store.profiles[id]) return;
 
-        if (id === app.store.activeProfile) app.switchProfile(ids.find((other) => other !== id), false);
+        if (id === app.store.activeProfile)
+            app.switchProfile(
+                ids.find((other) => other !== id),
+                false,
+            );
 
         delete app.store.profiles[id];
+        app.markDeleted(app.store.deletedProfiles, id);
         app.saveState();
         app.updateStats();
         app.renderProfiles();

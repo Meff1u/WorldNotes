@@ -10,7 +10,16 @@ export const execute = async (app) => {
 
     app.createEmptyProfile = function (name = app.constants.defaultProfileName) {
         const now = new Date().toISOString();
-        return { name, createdAt: now, updatedAt: now, countries: {}, groups: {} };
+        return { name, createdAt: now, updatedAt: now, countries: {}, groups: {}, deleted: { countries: {}, groups: {} } };
+    };
+
+    // Deletions are remembered with their time, so syncing with an older copy can't bring the data back
+    app.markDeleted = function (map, key) {
+        map[key] = new Date().toISOString();
+    };
+
+    app.normalizeTombstones = function (data) {
+        return Object.fromEntries(Object.entries(isObject(data) ? data : {}).filter(([, value]) => !Number.isNaN(Date.parse(value))));
     };
 
     app.createEmptyStore = function () {
@@ -20,6 +29,7 @@ export const execute = async (app) => {
             settings: { theme: document.documentElement.dataset.theme || "dark" },
             activeProfile: id,
             profiles: { [id]: app.createEmptyProfile() },
+            deletedProfiles: {},
         };
     };
 
@@ -56,7 +66,7 @@ export const execute = async (app) => {
     // Accepts the current multi-profile format and older single-profile saves or exports (version 1 and 2)
     app.normalizeStore = function (data) {
         if (!isObject(data)) throw new Error("Data is not an object");
-        if (data.profiles && !isObject(data.profiles)) throw new Error("\"profiles\" must be an object");
+        if (data.profiles && !isObject(data.profiles)) throw new Error('"profiles" must be an object');
 
         const store = app.createEmptyStore();
         store.profiles = {};
@@ -76,12 +86,13 @@ export const execute = async (app) => {
         if (!ids.length) throw new Error("No profiles found");
 
         store.activeProfile = store.profiles[data.activeProfile] ? data.activeProfile : ids[0];
+        store.deletedProfiles = app.normalizeTombstones(data.deletedProfiles);
         return store;
     };
 
     app.normalizeProfile = function (data) {
-        if (data.countries && !isObject(data.countries)) throw new Error("\"countries\" must be an object");
-        if (data.groups && !isObject(data.groups)) throw new Error("\"groups\" must be an object");
+        if (data.countries && !isObject(data.countries)) throw new Error('"countries" must be an object');
+        if (data.groups && !isObject(data.groups)) throw new Error('"groups" must be an object');
 
         const name = typeof data.name === "string" ? data.name.trim().slice(0, app.constants.profileNameLength) : "";
         const profile = app.createEmptyProfile(name || app.constants.defaultProfileName);
@@ -121,6 +132,11 @@ export const execute = async (app) => {
             profile.countries[countryName] = { note, color, colorSource, updatedAt: timestamp(entry.updatedAt) };
         }
 
+        profile.deleted = {
+            countries: app.normalizeTombstones(data.deleted?.countires),
+            groups: app.normalizeTombstones(data.deleted?.groups),
+        }
+
         return profile;
     };
 
@@ -138,8 +154,13 @@ export const execute = async (app) => {
     app.updateEntry = function (name, changes) {
         const entry = { note: "", color: null, colorSource: null, ...app.getEntry(name), ...changes, updatedAt: new Date().toISOString() };
 
-        if (!entry.note.trim() && !entry.color && !entry.colorSource) delete app.state.countries[name];
-        else app.state.countries[name] = entry;
+        if (!entry.note.trim() && !entry.color && !entry.colorSource) {
+            delete app.state.countries[name];
+            app.markDeleted(app.state.deleted.countries, name);
+        } else {
+            app.state.countries[name] = entry;
+            delete app.state.deleted.countries[name];
+        }
 
         const saved = app.saveState();
         app.updateStats();
@@ -148,6 +169,7 @@ export const execute = async (app) => {
 
     app.removeEntry = function (name) {
         delete app.state.countries[name];
+        app.markDeleted(app.state.deleted.countries, name);
         app.saveState();
         app.updateStats();
     };

@@ -18,8 +18,8 @@ export const execute = async (app) => {
 
         const topology = await response.json();
 
-        return feature(topology, topology.objects.countries).features
-            .map((country) => {
+        return feature(topology, topology.objects.countries)
+            .features.map((country) => {
                 const source = country.geometry.type === "Polygon" ? [country.geometry.coordinates] : country.geometry.coordinates;
                 const polygons = source.map((polygon) => polygon.map((ring) => app.densifyRing(ring, 1)));
                 const geometry = { type: "MultiPolygon", coordinates: polygons };
@@ -81,7 +81,10 @@ export const execute = async (app) => {
     app.getCountryLabel = function (country) {
         const note = app.getEntry(country.name)?.note.trim();
         const preview = note && note.length > 90 ? `${note.slice(0, 90)}…` : note;
-        const groups = app.getCountryGroups(country.name).map((group) => group.name).join(", ");
+        const groups = app
+            .getCountryGroups(country.name)
+            .map((group) => group.name)
+            .join(", ");
         return `<strong>${app.escapeHtml(country.name)}</strong>${groups ? `<em>${app.escapeHtml(groups)}</em>` : ""}${preview ? `<span>${app.escapeHtml(preview)}</span>` : ""}`;
     };
 
@@ -104,10 +107,12 @@ export const execute = async (app) => {
                 for (const index of triangles) indices.push(index + offset);
                 offset += vertices.length;
 
-                app.forEachSegment(part.coordinates, (from, to) => borders.push(
-                    ...app.toCartesian(from[1], from[0], radius * (1 + altitude.border)),
-                    ...app.toCartesian(to[1], to[0], radius * (1 + altitude.border)),
-                ));
+                app.forEachSegment(part.coordinates, (from, to) =>
+                    borders.push(
+                        ...app.toCartesian(from[1], from[0], radius * (1 + altitude.border)),
+                        ...app.toCartesian(to[1], to[0], radius * (1 + altitude.border)),
+                    ),
+                );
             }
 
             country.range = { start, count: offset - start, indexStart, indexCount: indices.length - indexStart };
@@ -220,7 +225,12 @@ export const execute = async (app) => {
             .pathsData(country ? country.parts.flatMap((part) => part.coordinates.map((ring) => ({ points: ring.map(([lng, lat]) => [lat, lng]) }))) : [])
             .pathColor(() => accent)
             .ringsData(marker)
-            .ringColor(() => (t) => `${accent}${Math.round((1 - t) * 255).toString(16).padStart(2, "0")}`);
+            .ringColor(
+                () => (t) =>
+                    `${accent}${Math.round((1 - t) * 255)
+                        .toString(16)
+                        .padStart(2, "0")}`,
+            );
     };
 
     app.refreshGlobeTheme = function () {
@@ -228,9 +238,7 @@ export const execute = async (app) => {
 
         const colors = app.getThemeColors();
 
-        app.globe
-            .backgroundColor(colors.background)
-            .atmosphereColor(colors.atmosphere);
+        app.globe.backgroundColor(colors.background).atmosphereColor(colors.atmosphere);
 
         app.globe.globeMaterial().color.set(colors.ocean);
         app.borders.material.color.set(colors.stroke);
@@ -302,7 +310,7 @@ export const execute = async (app) => {
         };
 
         update();
-    }
+    };
 
     // Hit testing on lat/lng instead of raycasting thousands of triangles keeps pointer moves cheap
     app.findCountryAt = function (x, y) {
@@ -311,11 +319,17 @@ export const execute = async (app) => {
 
         const { lat, lng } = coords;
 
-        return app.countries.find((country) => country.parts.some(({ polygon, bounds: [[west, south], [east, north]] }) =>
-            lat >= south && lat <= north
-            && (west <= east ? lng >= west && lng <= east : lng >= west || lng <= east)
-            && geoContains(polygon, [lng, lat]),
-        )) || null;
+        return (
+            app.countries.find((country) =>
+                country.parts.some(
+                    ({ polygon, bounds: [[west, south], [east, north]] }) =>
+                        lat >= south &&
+                        lat <= north &&
+                        (west <= east ? lng >= west && lng <= east : lng >= west || lng <= east) &&
+                        geoContains(polygon, [lng, lat]),
+                ),
+            ) || null
+        );
     };
 
     app.setHovered = function (country) {

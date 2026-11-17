@@ -63,6 +63,7 @@ export const execute = async (app) => {
 
         app.releaseGroupColor(id, group.members);
         delete app.state.groups[id];
+        app.markDeleted(app.state.deleted.groups, id);
         if (app.highlightedGroup === id) app.clearGroupHighlight();
         app.saveGroups(group.members);
     };
@@ -88,10 +89,29 @@ export const execute = async (app) => {
 
     app.bindGroups = function () {
         for (const id of [
-            "groups", "groups-dialog", "groups-list-view", "groups-close", "group-new", "groups-items", "groups-empty",
-            "group-detail-view", "group-back", "group-name", "group-detail-close", "group-swatches", "group-note", "group-save-status",
-            "group-members-title", "group-members", "group-members-empty", "group-show", "group-delete",
-            "group-banner", "group-banner-dot", "group-banner-text", "group-banner-close",
+            "groups",
+            "groups-dialog",
+            "groups-list-view",
+            "groups-close",
+            "group-new",
+            "groups-items",
+            "groups-empty",
+            "group-detail-view",
+            "group-back",
+            "group-name",
+            "group-detail-close",
+            "group-swatches",
+            "group-note",
+            "group-save-status",
+            "group-members-title",
+            "group-members",
+            "group-members-empty",
+            "group-show",
+            "group-delete",
+            "group-banner",
+            "group-banner-dot",
+            "group-banner-text",
+            "group-banner-close",
         ]) {
             elements[id] = document.getElementById(id);
         }
@@ -176,22 +196,26 @@ export const execute = async (app) => {
 
         const groups = app.getGroups();
 
-        elements["groups-items"].replaceChildren(...groups.map((group) => {
-            const item = document.createElement("li");
-            const button = Object.assign(document.createElement("button"), { className: "list-row" });
-            const swatch = Object.assign(document.createElement("i"), { className: "list-swatch" });
-            const text = Object.assign(document.createElement("span"), { className: "list-text" });
-            const note = group.note.trim().replace(/\s+/g, " ");
+        elements["groups-items"].replaceChildren(
+            ...groups.map((group) => {
+                const item = document.createElement("li");
+                const button = Object.assign(document.createElement("button"), { className: "list-row" });
+                const swatch = Object.assign(document.createElement("i"), { className: "list-swatch" });
+                const text = Object.assign(document.createElement("span"), { className: "list-text" });
+                const note = group.note.trim().replace(/\s+/g, " ");
 
-            swatch.style.setProperty("--swatch", group.color);
-            text.append(Object.assign(document.createElement("span"), { className: "list-name", textContent: group.name }));
-            text.append(Object.assign(document.createElement("span"), { className: "list-note", textContent: note || app.plural(group.members.length, "country") }));
-            button.append(swatch, text, Object.assign(document.createElement("span"), { className: "list-meta", textContent: group.members.length }));
-            button.addEventListener("click", () => app.openGroupDetail(group.id));
+                swatch.style.setProperty("--swatch", group.color);
+                text.append(Object.assign(document.createElement("span"), { className: "list-name", textContent: group.name }));
+                text.append(
+                    Object.assign(document.createElement("span"), { className: "list-note", textContent: note || app.plural(group.members.length, "country") }),
+                );
+                button.append(swatch, text, Object.assign(document.createElement("span"), { className: "list-meta", textContent: group.members.length }));
+                button.addEventListener("click", () => app.openGroupDetail(group.id));
 
-            item.append(button);
-            return item;
-        }));
+                item.append(button);
+                return item;
+            }),
+        );
 
         elements["groups-empty"].hidden = Boolean(groups.length);
         elements["group-detail-view"].hidden = true;
@@ -218,38 +242,47 @@ export const execute = async (app) => {
 
     app.renderGroupMembers = function () {
         const group = app.state.groups[editing];
-        const members = group.members.map((name) => app.findCountry(name)).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
+        const members = group.members
+            .map((name) => app.findCountry(name))
+            .filter(Boolean)
+            .sort((a, b) => a.name.localeCompare(b.name));
 
         elements["group-members-title"].textContent = `Countries (${members.length})`;
         elements["group-members-empty"].hidden = Boolean(members.length);
         elements["group-show"].disabled = !members.length;
 
-        elements["group-members"].replaceChildren(...members.map((country) => {
-            const item = Object.assign(document.createElement("li"), { className: "member-row" });
-            const button = Object.assign(document.createElement("button"), { className: "list-row" });
-            const swatch = Object.assign(document.createElement("i"), { className: "list-swatch" });
-            const color = app.getCountryColor(country.name);
-            const remove = Object.assign(document.createElement("button"), { className: "icon-button member-remove", title: `Remove ${country.name} from the group` });
+        elements["group-members"].replaceChildren(
+            ...members.map((country) => {
+                const item = Object.assign(document.createElement("li"), { className: "member-row" });
+                const button = Object.assign(document.createElement("button"), { className: "list-row" });
+                const swatch = Object.assign(document.createElement("i"), { className: "list-swatch" });
+                const color = app.getCountryColor(country.name);
+                const remove = Object.assign(document.createElement("button"), {
+                    className: "icon-button member-remove",
+                    title: `Remove ${country.name} from the group`,
+                });
 
-            if (color) swatch.style.setProperty("--swatch", color);
-            else swatch.classList.add("empty");
+                if (color) swatch.style.setProperty("--swatch", color);
+                else swatch.classList.add("empty");
 
-            button.append(swatch, Object.assign(document.createElement("span"), { className: "list-name", textContent: country.name }));
-            button.addEventListener("click", () => {
-                app.closeDialog(elements["groups-dialog"]);
-                app.selectCountry(country, true);
-            });
+                button.append(swatch, Object.assign(document.createElement("span"), { className: "list-name", textContent: country.name }));
+                button.addEventListener("click", () => {
+                    app.closeDialog(elements["groups-dialog"]);
+                    app.selectCountry(country, true);
+                });
 
-            remove.setAttribute("aria-label", remove.title);
-            remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>';
-            remove.addEventListener("click", () => {
-                app.removeFromGroup(editing, country.name);
-                app.renderGroupMembers();
-            });
+                remove.setAttribute("aria-label", remove.title);
+                remove.innerHTML =
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>';
+                remove.addEventListener("click", () => {
+                    app.removeFromGroup(editing, country.name);
+                    app.renderGroupMembers();
+                });
 
-            item.append(button, remove);
-            return item;
-        }));
+                item.append(button, remove);
+                return item;
+            }),
+        );
     };
 
     app.flushGroupNote = function () {
@@ -297,10 +330,12 @@ export const execute = async (app) => {
         const center = length > 0.01 ? sum.map((value) => value / length) : vectors[0];
         const lat = (Math.asin(center[1]) * 180) / Math.PI;
         const lng = (Math.atan2(center[0], center[2]) * 180) / Math.PI;
-        const reach = Math.max(...members.map(({ view }, i) => {
-            const dot = vectors[i].reduce((total, value, axis) => total + value * center[axis], 0);
-            return (Math.acos(Math.min(1, Math.max(-1, dot))) * 180) / Math.PI + view.span / 2;
-        }));
+        const reach = Math.max(
+            ...members.map(({ view }, i) => {
+                const dot = vectors[i].reduce((total, value, axis) => total + value * center[axis], 0);
+                return (Math.acos(Math.min(1, Math.max(-1, dot))) * 180) / Math.PI + view.span / 2;
+            }),
+        );
 
         app.globe.pointOfView({ lat, lng, altitude: app.fitAltitude(Math.min(2.6, Math.max(0.3, 0.2 + reach * 0.045))) }, app.constants.view.transition);
     };

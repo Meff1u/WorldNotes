@@ -62,7 +62,9 @@ for (const geometry of [...geometries]) {
         const [ring] = feature(topology, { type: "Polygon", arcs: polygon }).geometry.coordinates;
         const lng = ring.reduce((sum, point) => sum + point[0], 0) / ring.length;
         const lat = ring.reduce((sum, point) => sum + point[1], 0) / ring.length;
-        const territory = candidates.find(({ boxes }) => boxes.some(([west, south, east, north]) => lng >= west && lng <= east && lat >= south && lat <= north));
+        const territory = candidates.find(({ boxes }) =>
+            boxes.some(([west, south, east, north]) => lng >= west && lng <= east && lat >= south && lat <= north),
+        );
 
         if (!territory) return true;
         split.set(territory.name, [...(split.get(territory.name) || []), polygon]);
@@ -71,13 +73,17 @@ for (const geometry of [...geometries]) {
     });
 
     for (const [name, polygons] of split) {
-        geometries.push(polygons.length === 1
-            ? { type: "Polygon", arcs: polygons[0], properties: { name } }
-            : { type: "MultiPolygon", arcs: polygons, properties: { name } });
+        geometries.push(
+            polygons.length === 1
+                ? { type: "Polygon", arcs: polygons[0], properties: { name } }
+                : { type: "MultiPolygon", arcs: polygons, properties: { name } },
+        );
     }
 }
 
-const missing = Object.entries(found).filter(([, count]) => !count).map(([name]) => name);
+const missing = Object.entries(found)
+    .filter(([, count]) => !count)
+    .map(([name]) => name);
 if (missing.length) throw new Error(`No polygons found for: ${missing.join(", ")}`);
 // A parent split completely into territories (e.g. Australian Indian Ocean Territories) is left without polygons
 topology.objects.countries.geometries = geometries.filter((geometry) => geometry.arcs.length);
@@ -93,13 +99,16 @@ for (const geometry of topology.objects.countries.geometries) {
         const outline = feature(topology, { type: "Polygon", arcs: [polygon[0]] }).geometry;
         if (geoArea(outline) <= 2 * Math.PI) continue;
 
-        polygon[0] = polygon[0].slice().reverse().map((index) => ~index);
-        reversed++
+        polygon[0] = polygon[0]
+            .slice()
+            .reverse()
+            .map((index) => ~index);
+        reversed++;
     }
 }
 
-const collapsed = feature(topology, topology.objects.countries).features
-    .filter(({ geometry }) => {
+const collapsed = feature(topology, topology.objects.countries)
+    .features.filter(({ geometry }) => {
         const polygons = geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
         return !polygons.some(([ring]) => new Set(ring.map((point) => point.join())).size >= 3);
     })
@@ -115,6 +124,10 @@ const json = JSON.stringify(topology);
 mkdirSync("./public/data", { recursive: true });
 writeFileSync(output, json);
 
-console.log(`Split ${Object.entries(found).map(([name, count]) => `${name} (${count})`).join(", ")}`);
+console.log(
+    `Split ${Object.entries(found)
+        .map(([name, count]) => `${name} (${count})`)
+        .join(", ")}`,
+);
 console.log(`Saved ${countries.length} countries, ${points} points to ${output} (${(json.length / 1024).toFixed(0)} KB)`);
 console.log(`Fixed ${reversed} inverted rings`);
