@@ -9,7 +9,6 @@ export const execute = async (app) => {
             "sync-dialog",
             "sync-signed-out",
             "sync-signed-in",
-            "sync-google",
             "sync-email-form",
             "sync-email",
             "sync-message",
@@ -39,7 +38,9 @@ export const execute = async (app) => {
         elements["sync-close"].addEventListener("click", () => app.closeDialog(elements["sync-dialog"]));
         app.closeOnBackdrop(elements["sync-dialog"]);
 
-        elements["sync-google"].addEventListener("click", () => app.runSyncAction(() => app.signInWithGoogle()));
+        for (const button of elements["sync-signed-out"].querySelectorAll("[data-provider]")) {
+            button.addEventListener("click", () => app.runSyncAction(() => app.signInWithProvider(button.dataset.provider)));
+        }
 
         elements["sync-email-form"].addEventListener("submit", (event) => {
             event.preventDefault();

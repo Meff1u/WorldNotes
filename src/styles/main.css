@@ -1657,18 +1657,34 @@ textarea::placeholder {
     margin-top: 4px;
 }
 
-.sync-google {
+.sync-providers {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.sync-provider {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
     height: 42px;
-    margin-top: 6px;
 }
 
-.sync-google svg {
+.sync-provider svg {
     width: 18px;
     height: 18px;
+}
+
+.sync-discord {
+    border-color: transparent;
+    background: #5865f2;
+    color: #ffffff;
+}
+
+.sync-discord:hover {
+    background: #4752c4;
 }
 
 .sync-divider {

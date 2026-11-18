@@ -52,8 +52,9 @@ export const execute = async (app) => {
         return app.cloud.user;
     };
 
-    app.signInWithGoogle = async function () {
-        const { error } = await (await app.getCloudClient()).auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
+    // Google and Discord use the same OAuth flow, only the provider name differs
+    app.signInWithProvider = async function (provider) {
+        const { error } = await (await app.getCloudClient()).auth.signInWithOAuth({ provider, options: { redirectTo } });
         if (error) throw error;
     };
 

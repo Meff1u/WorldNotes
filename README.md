@@ -15,7 +15,7 @@ Interactive 3D globe for keeping notes about countries. Live at https://meff1u.g
 - **Search** to find a country by name and fly the camera to it, ignoring diacritics (`aland` finds Åland Islands)
 - **Country list** with search by name or note and filters (with note, without note, colored, by group)
 - **Random country** picker: any country, one without a note, one you've already written about, or one from a group
-- **Optional cloud sync**: sign in with Google or an email link to keep your data in step across devices; without signing in nothing leaves your browser
+- **Optional cloud sync**: sign in with Google, Discord or an email link to keep your data in step across devices; without signing in nothing leaves your browser
 - **Import and export** of all profiles, notes, colors and settings as a JSON file
 - **Light and dark theme**, defaulting to your system preference
 - **Factory reset** to wipe all profiles, notes and settings, with a confirmation step
@@ -69,7 +69,7 @@ A profile is a separate globe with its own notes, colors and groups.
 
 Cloud sync is optional. It appears in the settings menu only when the site is built with Supabase keys (see [Development](#development)).
 
-- **Sign in** with **Continue with Google** or by entering your email to get a one-time sign-in link
+- **Sign in** with **Continue with Google**, **Continue with Discord** or by entering your email to get a one-time sign-in link
 - While signed in, every change is uploaded a couple of seconds after you stop typing, and changes from your other devices arrive live. Without internet everything keeps working and catches up once you're back online
 - Changes are merged per country, group and profile: the newer change wins, so editing different countries on two devices never loses anything
 - The first time a device connects to an account that already has data, you choose to **merge both**, **use the cloud data** or **use this device's data**
@@ -184,7 +184,7 @@ Without configuration WorldNotes works fully offline and the Cloud sync option s
 
 1. Create a project on [Supabase](https://supabase.com) and run `supabase/schema.sql` in its **SQL Editor**. It creates the `stores` table with row level security and the `delete_account()` function
 2. In **Authentication → URL Configuration** set the site URL and add the redirect URLs (the live site and `http://127.0.0.1:5173/WorldNotes/`)
-3. For Google sign-in, create an OAuth client in Google Cloud Console and enter its client ID and secret in **Authentication → Sign In / Providers → Google**. Email links work out of the box
+3. For Google sign-in, create an OAuth client in Google Cloud Console and enter its client ID and secret in **Authentication → Sign In / Providers → Google**. Email links work out of the box. For Discord, create an application in the Discord Developer Portal, add the Supabase callback URL under **OAuth2 → Redirects** and enter its client ID and secret under **Discord**.
 4. Copy `.env.example` to `.env` and fill in the project URL and the public (publishable or anon) key from **Project Settings → API Keys**
 
 The public key is meant to be visible in the page; row level security in the database keeps every user's data private. Never put the secret (service role) key in the code.
