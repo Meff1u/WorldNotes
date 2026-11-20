@@ -132,7 +132,7 @@ export const execute = async (app) => {
             const colorSources = [...new Set(sources)]
                 .filter((id) => profile.groups[id]?.members.includes(countryName))
                 .slice(0, app.constants.maxGroupColors);
-            if (!note.trim() && !color && !colorSource.length) continue;
+            if (!note.trim() && !color && !colorSources.length) continue;
 
             profile.countries[countryName] = { note, color, colorSource, updatedAt: timestamp(entry.updatedAt) };
         }
