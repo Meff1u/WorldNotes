@@ -7,6 +7,7 @@ import countryLabels from "../libs/countryLabels.json";
 export const execute = async (app) => {
     const radius = 100;
     const color = new Color();
+    const colorAttributes = ["color", "color2", "color3"];
     let fullColorUpload = false;
 
     app.hovered = null;
@@ -55,22 +56,26 @@ export const execute = async (app) => {
         return altitude * Math.max(1, (window.innerHeight / window.innerWidth) * 0.8);
     };
 
-    app.getCapColor = function (country) {
+    // Every color of a country (one, or up to three group stripes) is lit up or faded the same way
+    app.getCapColors = function (country) {
         const colors = app.getThemeColors();
-        const custom = app.getCountryColor(country.name);
-        const base = custom || colors.land;
+        const custom = app.getCountryColors(country.name);
 
-        if (country === app.selected) return custom ? app.mixColors(custom, "#ffffff", 0.18) : app.mixColors(base, colors.accent, 0.5);
-        if (country === app.hovered) return custom ? app.mixColors(custom, "#ffffff", 0.1) : app.mixColors(base, colors.accent, 0.22);
+        return (custom.length ? custom : [colors.land]).map((base) => {
+            const own = custom.length > 0;
 
-        // While a group is shown its members take on the group color and everything else fades towards the ocean
-        if (app.highlightedGroup) {
-            return app.isHighlightMember(country.name)
-                ? app.mixColors(base, app.state.groups[app.highlightedGroup].color, custom ? 0.35 : 0.6)
-                : app.mixColors(base, colors.ocean, 0.55);
-        }
+            if (country === app.selected) return own ? app.mixColors(base, "#ffffff", 0.18) : app.mixColors(base, colors.accent, 0.5);
+            if (country === app.hovered) return own ? app.mixColors(base, "#ffffff", 0.1) : app.mixColors(base, colors.accent, 0.22);
 
-        return base;
+            // While a group is shown its members take on the group color and everything else fades towards the ocean
+            if (app.highlightedGroup) {
+                return app.isHighlightMember(country.name)
+                    ? app.mixColors(base, app.state.groups[app.highlightedGroup].color, own ? 0.35 : 0.6)
+                    : app.mixColors(base, colors.ocean, 0.55);
+            }
+
+            return base;
+        });
     };
 
     app.getSideColor = function (country) {
@@ -94,6 +99,7 @@ export const execute = async (app) => {
         const positions = [];
         const indices = [];
         const borders = [];
+        const stripes = [];
         let offset = 0;
 
         for (const country of app.countries) {
@@ -103,7 +109,13 @@ export const execute = async (app) => {
             for (const part of country.parts) {
                 const { vertices, indices: triangles } = app.triangulatePolygon(part.coordinates, 3);
 
-                for (const [lng, lat] of vertices) positions.push(...app.toCartesian(lat, lng, radius * (1 + altitude.base)));
+                for (const [lng, lat] of vertices) {
+                    positions.push(...app.toCartesian(lat, lng, radius * (1 + altitude.base)));
+
+                    // Distance along a diagonal in degrees, measured from the country's center so the 180th meridian doesn't break it
+                    const east = ((lng - country.view.lng + 540) % 360) - 180;
+                    stripes.push(1, 1, lat + east * Math.cos((lat * Math.PI) / 180));
+                }
                 for (const index of triangles) indices.push(index + offset);
                 offset += vertices.length;
 
@@ -120,7 +132,8 @@ export const execute = async (app) => {
 
         const landGeometry = new BufferGeometry();
         landGeometry.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
-        landGeometry.setAttribute("color", new BufferAttribute(new Float32Array(offset * 3), 3));
+        for (const name of colorAttributes) landGeometry.setAttribute(name, new BufferAttribute(new Float32Array(offset * 3), 3));
+        landGeometry.setAttribute("stripe", new BufferAttribute(new Float32Array(stripes), 3));
         landGeometry.setIndex(new BufferAttribute(new Uint32Array(indices), 1));
 
         const borderGeometry = new BufferGeometry();
@@ -128,15 +141,15 @@ export const execute = async (app) => {
 
         // The raised cap reuses the land buffers through a draw range, so selecting even Russia builds no new triangles
         const capGeometry = new BufferGeometry();
-        capGeometry.setAttribute("position", landGeometry.getAttribute("position"));
+        for (const name of ["position", ...colorAttributes, "stripe"]) capGeometry.setAttribute(name, landGeometry.getAttribute(name));
         capGeometry.setIndex(landGeometry.index);
 
-        app.land = new Mesh(landGeometry, new MeshBasicMaterial({ vertexColors: true, side: DoubleSide }));
+        app.land = new Mesh(landGeometry, app.createLandMaterial());
         app.land.onAfterRender = () => {
             fullColorUpload = false;
         };
         app.borders = new LineSegments(borderGeometry, new LineBasicMaterial({ transparent: true, depthWrite: false }));
-        app.selectionCap = new Mesh(capGeometry, new MeshBasicMaterial({ side: DoubleSide }));
+        app.selectionCap = new Mesh(capGeometry, app.land.material);
         app.selectionWalls = new Mesh(new BufferGeometry(), new MeshBasicMaterial({ side: DoubleSide }));
 
         app.selectionCap.scale.setScalar((1 + altitude.selected) / (1 + altitude.base));
@@ -144,6 +157,47 @@ export const execute = async (app) => {
         app.selectionCap.frustumCulled = app.selectionWalls.frustumCulled = false;
 
         app.globe.scene().add(app.land, app.borders, app.selectionCap, app.selectionWalls);
+    };
+
+    // A country with several colors gets diagonal stripes: each vertex carries all three colors, the stripe count,
+    // the stripe width and its position along the diagonal, and the fragment shader picks the color, so no extra triangles are needed
+    app.createLandMaterial = function () {
+        const material = new MeshBasicMaterial({ vertexColors: true, side: DoubleSide });
+
+        material.onBeforeCompile = (shader) => {
+            const varyings = `
+                varying vec3 vColor2;
+                varying vec3 vColor3;
+                varying vec3 vStripe;`;
+
+            shader.vertexShader = shader.vertexShader
+                .replace(
+                    "#include <common>",
+                    `#include <common>
+                    attribute vec3 color2;
+                    attribute vec3 color3;
+                    attribute vec3 stripe;
+                    ${varyings}`,
+                )
+                .replace(
+                    "#include <begin_vertex>",
+                    `#include <begin_vertex>
+                    vColor2 = color2;
+                    vColor3 = color3;
+                    vStripe = stripe;`,
+                );
+
+            shader.fragmentShader = shader.fragmentShader.replace("#include <common>", `#include <common>${varyings}`).replace(
+                "#include <color_fragment>",
+                `#include <color_fragment>
+                    if (vStripe.x > 1.5) {
+                        float band = mod(floor(vStripe.z / vStripe.y), vStripe.x);
+                        diffuseColor.rgb = diffuse * (band < 0.5 ? vColor.rgb : band < 1.5 ? vColor2 : vColor3);
+                    }`,
+            );
+        };
+
+        return material;
     };
 
     app.forEachSegment = function (rings, callback) {
@@ -171,21 +225,36 @@ export const execute = async (app) => {
         return geometry;
     };
 
-    app.paintCountry = function (country) {
-        const attribute = app.land.geometry.getAttribute("color");
+    // Stripe width follows the country's size, so small and large countries both show a handful of stripes
+    const writeCountryColors = function (country) {
+        const geometry = app.land.geometry;
+        const colors = app.getCapColors(country);
         const { start, count } = country.range;
+        const width = Math.min(4, Math.max(0.05, country.view.span * 0.15));
 
-        color.set(app.getCapColor(country));
-        for (let i = start; i < start + count; i++) attribute.setXYZ(i, color.r, color.g, color.b);
+        colorAttributes.forEach((name, index) => {
+            const attribute = geometry.getAttribute(name);
+            color.set(colors[index] || colors[0]);
+            for (let i = start; i < start + count; i++) attribute.setXYZ(i, color.r, color.g, color.b);
+        });
 
-        // A pending full repaint must not be narrowed down to this country's range before it reaches the GPU
-        if (!fullColorUpload) attribute.addUpdateRange(start * 3, count * 3);
-        attribute.needsUpdate = true;
+        const stripe = geometry.getAttribute("stripe");
+        for (let i = start; i < start + count; i++) stripe.setXY(i, colors.length, width);
+    };
 
-        if (country === app.selected) {
-            app.selectionCap.material.color.set(app.getCapColor(country));
-            app.selectionWalls.material.color.set(app.getSideColor(country));
+    const landAttributes = () => [...colorAttributes, "stripe"].map((name) => app.land.geometry.getAttribute(name));
+
+    app.paintCountry = function (country) {
+        const { start, count } = country.range;
+        writeCountryColors(country);
+
+        for (const attribute of landAttributes()) {
+            // A pending full repaint must not be narrowed down to this country's range before it reaches the GPU
+            if (!fullColorUpload) attribute.addUpdateRange(start * attribute.itemSize, count * attribute.itemSize);
+            attribute.needsUpdate = true;
         }
+
+        if (country === app.selected) app.selectionWalls.material.color.set(app.getSideColor(country));
     };
 
     app.refreshCountry = function (country) {
@@ -193,17 +262,14 @@ export const execute = async (app) => {
     };
 
     app.refreshPolygons = function () {
-        const attribute = app.land.geometry.getAttribute("color");
+        for (const country of app.countries) writeCountryColors(country);
 
-        for (const country of app.countries) {
-            color.set(app.getCapColor(country));
-            const { start, count } = country.range;
-            for (let i = start; i < start + count; i++) attribute.setXYZ(i, color.r, color.g, color.b);
+        for (const attribute of landAttributes()) {
+            attribute.clearUpdateRanges();
+            attribute.needsUpdate = true;
         }
 
-        attribute.clearUpdateRanges();
         fullColorUpload = true;
-        attribute.needsUpdate = true;
         if (app.selected) app.paintCountry(app.selected);
     };
 

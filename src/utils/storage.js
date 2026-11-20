@@ -127,8 +127,12 @@ export const execute = async (app) => {
 
             const note = typeof entry.note === "string" ? entry.note : "";
             const color = app.isHexColor(entry.color) ? entry.color.toLowerCase() : null;
-            const colorSource = profile.groups[entry.colorSource]?.members.includes(countryName) ? entry.colorSource : null;
-            if (!note.trim() && !color && !colorSource) continue;
+            // Files from before multiple group colors keep a single "colorSource" id
+            const sources = Array.isArray(entry.colorSources) ? entry.colorSources : [entry.colorSources];
+            const colorSources = [...new Set(sources)]
+                .filter((id) => profile.groups[id]?.members.includes(countryName))
+                .slice(0, app.constants.maxGroupColors);
+            if (!note.trim() && !color && !colorSource.length) continue;
 
             profile.countries[countryName] = { note, color, colorSource, updatedAt: timestamp(entry.updatedAt) };
         }
@@ -145,17 +149,22 @@ export const execute = async (app) => {
         return app.state.countries[name] || null;
     };
 
-    // Group color wins only when the country explicitly switched to it
+    // Group color wins only when the country explicitly switched to them; with several they are show as stripes
+    app.getCountryColors = function (name, profile = app.state) {
+        const entry = profile.countries[name];
+        const groupColors = (entry?.colorSources || []).map((id) => profile.groups[id]?.color).filter(Boolean);
+        if (groupColors.length) return groupColors;
+        return entry?.color ? [entry.color] : [];
+    };
+
     app.getCountryColor = function (name) {
-        const entry = app.getEntry(name);
-        const group = entry?.colorSource && app.state.groups[entry.colorSource];
-        return group ? group.color : entry?.color || null;
+        return app.getCountryColors(name)[0] || null;
     };
 
     app.updateEntry = function (name, changes) {
-        const entry = { note: "", color: null, colorSource: null, ...app.getEntry(name), ...changes, updatedAt: new Date().toISOString() };
+        const entry = { note: "", color: null, colorSources: [], ...app.getEntry(name), ...changes, updatedAt: new Date().toISOString() };
 
-        if (!entry.note.trim() && !entry.color && !entry.colorSource) {
+        if (!entry.note.trim() && !entry.color && !entry.colorSources.length) {
             delete app.state.countries[name];
             app.markDeleted(app.state.deleted.countries, name);
         } else {
@@ -177,7 +186,7 @@ export const execute = async (app) => {
 
     app.getProfileSummary = function (profile = app.state) {
         const entries = Object.entries(profile.countries);
-        const colorOf = ([, entry]) => (entry.colorSource && profile.groups[entry.colorSource] ? profile.groups[entry.colorSource].color : entry.color);
+        const colorOf = ([name]) => app.getCountryColors(name, profile).length;
 
         return {
             entries: entries.length,

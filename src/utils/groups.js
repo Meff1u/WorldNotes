@@ -50,10 +50,11 @@ export const execute = async (app) => {
         app.saveGroups("color" in changes ? group.members : []);
     };
 
-    // Countries that took their color from this group fall back to their own color
+    // The group's color is dropped from these countries; one left with no group colors falls back to its own color
     app.releaseGroupColor = function (id, names) {
         for (const name of names) {
-            if (app.getEntry(name)?.colorSource === id) app.updateEntry(name, { colorSource: null });
+            const sources = app.getEntry(name)?.colorSources || [];
+            if (sources.includes(id)) app.updateEntry(name, { colorSoures: sources.filter((source) => source !== id) });
         }
     };
 

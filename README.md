@@ -7,7 +7,7 @@ Interactive 3D globe for keeping notes about countries. Live at https://meff1u.g
 - **3D globe** with all 265 countries and territories from Natural Earth 1:10m, including small island nations like Tuvalu, Nauru or the Maldives and overseas regions such as Guadeloupe, Martinique or Réunion shown on their own
 - **Country notes**: write a note for any country, it saves automatically as you type
 - **Flags and status**: each panel shows the flag and whether the place is a country, a territory (e.g. "Overseas region of France") or a disputed area
-- **Surface colors**: paint a country with one of 12 preset colors or any custom color
+- **Surface colors**: paint a country with one of 12 preset colors or any custom color, or with up to three of its groups' colors shown as stripes
 - **Selection highlight**: the selected country is raised, lit up and outlined; very small countries also get a pulsing marker so they're easy to spot
 - **Groups**: collect countries into named groups with their own color and note; a country can belong to many groups
 - **Profiles**: keep several separate globes, each with its own notes, colors and groups, and switch between them
@@ -51,7 +51,7 @@ Territories without a flag of their own show the flag of their parent country (e
 Groups collect countries under one name, for example "Visited in 2024" or "Bucket list". Each group has its **own color** and **own note**, which never overwrite the notes of its countries.
 
 - **Add a country to a group** from its panel: use the **Add to a group…** list, or pick **+ New group…** to create one on the spot. The country's groups show up as chips; click a chip to open the group, or **×** to remove the country from it
-- **Pick which color a country uses** with the **Own color / Group color** switch in its panel. A country always starts with its own color; switching to **Group color** lets you choose which of its groups to take the color from, since a country can be in several groups but shows only one color
+- **Pick which colors a country uses** with the **Own color / Group color** switch in its panel. In **Group color** you can tick up to three of its groups; with more than one the country is shown with diagonal stripes in those colors, in the order you ticked them
 - **Manage groups** in **Groups** in the settings menu: create, rename, change the color, write the group note, see and remove member countries, or delete the group. Deleting a group keeps all country notes, and countries that used its color go back to their own
 - **Show on globe** in a group highlights its countries in the group color, fades the rest of the map and moves the camera to fit them all. Close the banner at the top (or press `Esc`) to go back to the normal view
 
@@ -130,7 +130,7 @@ The file format:
                 "Poland": {
                     "note": "Visited Kraków in 2024",
                     "color": "#ef4444",
-                    "colorSource": "gm3k2x9a1b",
+                    "colorSources": ["gm3k2x9a1b"],
                     "updatedAt": "2026-11-16T20:43:39.524Z"
                 }
             },
@@ -155,7 +155,7 @@ The file format:
 ```
 
 - Countries are keyed by their English name as shown on the map
-- `colorSource` is the id of the group whose color the country uses, or `null` for its own `color`
+- `colorSources` lists the ids of up to three groups whose colors the country uses, or is empty for its own `color`. Older files with a single `colorSource` still import
 - `deleted` and `deletedProfiles` remember what was deleted and when, so syncing with an older copy can't bring it back. They can be left empty when editing a file by hand
 - Files from older versions (1 and 2, before profiles) still import as a single profile
 

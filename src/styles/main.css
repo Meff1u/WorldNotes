@@ -827,6 +827,22 @@ svg {
     background: var(--accent-soft);
 }
 
+.group-color-option:disabled {
+    cursor: default;
+}
+
+.group-color-option:disabled[aria-checked="false"] {
+    opacity: 0.45;
+}
+
+.group-colors .hint {
+    margin: 0 0 4px;
+}
+
+.group-colors .hint[hidden] {
+    display: none;
+}
+
 .group-chips {
     display: flex;
     flex-wrap: wrap;

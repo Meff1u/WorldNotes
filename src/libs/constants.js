@@ -3,6 +3,7 @@ export default {
     syncDelay: 2000,
     dataVersion: 3,
     groupNameLength: 60,
+    maxGroupColors: 3,
     profileNameLength: 40,
     defaultProfileName: "My globe",
     storageQuotaChars: 5 * 1024 * 1024,

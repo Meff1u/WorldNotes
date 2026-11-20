@@ -122,25 +122,42 @@ export const execute = async (app) => {
         const name = app.selected.name;
         app.flushNote();
 
-        if (persist) app.updateEntry(name, { color, colorSource: null });
-        else app.state.countries[name] = { note: "", updatedAt: new Date().toISOString(), ...app.getEntry(name), color, colorSource: null };
+        if (persist) app.updateEntry(name, { color, colorSources: [] });
+        else app.state.countries[name] = { note: "", updatedAt: new Date().toISOString(), ...app.getEntry(name), color, colorSources: [] };
 
         app.refreshCountry(app.selected);
         app.renderPanelState(name, false);
     };
 
-    app.setColorMode = function (mode, groupId = null) {
+    app.setColorSources = function (colorSources) {
         if (!app.selected) return;
 
         const name = app.selected.name;
-        const groups = app.getCountryGroups(name);
-        const current = app.getEntry(name)?.colorSource;
-        const colorSource = mode === "group" ? groupId || (groups.some((group) => group.id === current) ? current : groups[0]?.id) || null : null;
-
         app.flushNote();
-        app.updateEntry(name, { colorSource });
+        app.updateEntry(name, { colorSources });
         app.refreshCountry(app.selected);
         app.renderPanelState(name, false);
+    };
+
+    app.setColorMode = function (mode) {
+        if (!app.selected) return;
+        if (mode === "own") return app.setColorSources([]);
+
+        const current = app.getEntry(app.selected.name)?.colorSources || [];
+        const first = app.getCountryGroups(app.selected.name)[0];
+        if (!current.length && first) app.setColorSources([first.id]);
+    };
+
+    // Up to maxGroupColors groups can be picked; the last one can't be unpicked, "Own color" does that
+    app.toggleGroupColor = function (groupId) {
+        if (!app.selected) return;
+
+        const current = app.getEntry(app.selected.name)?.colorSources || [];
+        if (current.includes(groupId)) {
+            if (current.length > 1) app.setColorSources(current.filter((id) => id !== groupId));
+        } else if (current.length < app.constants.maxGroupColors) {
+            app.setColorSources([...current, groupId]);
+        }
     };
 
     app.flushNote = function () {
@@ -159,7 +176,9 @@ export const execute = async (app) => {
     app.renderPanelState = function (name, syncNote = true) {
         const entry = app.getEntry(name);
         const groups = app.getCountryGroups(name);
-        const groupMode = Boolean(entry?.colorSource);
+        const sources = entry?.colorSources || [];
+        const groupMode = sources.length > 0;
+        const full = sources.length >= app.constants.maxGroupColors;
 
         for (const button of elements["color-mode"].querySelectorAll("button")) {
             const active = (button.dataset.mode === "group") === groupMode;
@@ -168,7 +187,7 @@ export const execute = async (app) => {
 
         const groupButton = elements["color-mode"].querySelector('[data-mode="group"]');
         groupButton.disabled = !groups.length;
-        groupButton.title = groups.length ? "Use the color of one of this country's groups" : "Add this country to a group first";
+        groupButton.title = groups.length ? "Use the colors of this country's groups" : "Add this country to a group first";
 
         picker.setValue(entry?.color || null);
         elements.swatches.hidden = groupMode;
@@ -176,15 +195,25 @@ export const execute = async (app) => {
         elements["color-reset"].hidden = groupMode;
         elements["color-reset"].disabled = !entry?.color;
 
+        const hint = Object.assign(document.createElement("p"), {
+            className: "hint",
+            textContent: `Pick up to ${app.constants.maxGroupColors} colors, more than one is shown as stripes.`,
+        });
+        hint.hidden = groups.length < 2;
+
         elements["group-colors"].replaceChildren(
+            hint,
             ...groups.map((group) => {
+                const checked = sources.includes(group.id);
                 const option = Object.assign(document.createElement("button"), { className: "group-color-option", type: "button" });
                 const dot = Object.assign(document.createElement("i"), { className: "list-swatch" });
                 dot.style.setProperty("--swatch", group.color);
-                option.setAttribute("role", "radio");
-                option.setAttribute("aria-checked", String(entry?.colorSource === group.id));
+                option.setAttribute("role", "checkbox");
+                option.setAttribute("aria-checked", String(checked));
+                option.disabled = checked ? sources.length === 1 : full;
+                if (!checked && full) option.title = `Up to ${app.constants.maxGroupColors} group colors`;
                 option.append(dot, Object.assign(document.createElement("span"), { textContent: group.name }));
-                option.addEventListener("click", () => app.setColorMode("group", group.id));
+                option.addEventListener("click", () => app.toggleGroupColor(group.id));
                 return option;
             }),
         );
