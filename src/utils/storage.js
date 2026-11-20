@@ -134,7 +134,7 @@ export const execute = async (app) => {
                 .slice(0, app.constants.maxGroupColors);
             if (!note.trim() && !color && !colorSources.length) continue;
 
-            profile.countries[countryName] = { note, color, colorSource, updatedAt: timestamp(entry.updatedAt) };
+            profile.countries[countryName] = { note, color, colorSources, updatedAt: timestamp(entry.updatedAt) };
         }
 
         profile.deleted = {
