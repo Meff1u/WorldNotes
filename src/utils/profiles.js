@@ -123,6 +123,8 @@ export const execute = async (app) => {
             "profiles-dialog",
             "profiles-close",
             "profile-new",
+            "profile-import",
+            "profile-import-file",
             "profiles-items",
             "profiles-storage-bar",
             "profiles-storage-text",
@@ -145,6 +147,13 @@ export const execute = async (app) => {
             app.switchProfile(id, false);
             renaming = id;
             app.renderProfiles();
+        });
+
+        elements["profile-import"].addEventListener("click", () => elements["profile-import-file"].click());
+        elements["profile-import-file"].addEventListener("change", async () => {
+            const [file] = elements["profile-import-file"].files;
+            if (file) await app.importProfile(file);
+            elements["profile-import-file"].value = "";
         });
 
         app.closeOnBackdrop(elements["profiles-dialog"]);
@@ -231,6 +240,9 @@ export const execute = async (app) => {
                     app.closeDialog(elements["profiles-dialog"]);
                 });
 
+                const download = app.createIconButton("Export profile", '<path d="M12 3v12M7 10l5 5 5-5M5 21h14" />');
+                download.addEventListener("click", () => app.exportProfile(profile.id));
+
                 const rename = app.createIconButton("Rename profile", '<path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z" /><path d="m13.5 7.5 3 3" />');
                 rename.addEventListener("click", () => {
                     renaming = profile.id;
@@ -252,7 +264,7 @@ export const execute = async (app) => {
                     app.toast(`Deleted profile "${profile.name}"`, "success");
                 });
 
-                item.append(main, rename, remove);
+                item.append(main, download, rename, remove);
                 return item;
             }),
         );

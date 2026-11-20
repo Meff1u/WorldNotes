@@ -16,7 +16,7 @@ Interactive 3D globe for keeping notes about countries. Live at https://meff1u.g
 - **Country list** with search by name or note and filters (with note, without note, colored, by group)
 - **Random country** picker: any country, one without a note, one you've already written about, or one from a group
 - **Optional cloud sync**: sign in with Google, Discord or an email link to keep your data in step across devices; without signing in nothing leaves your browser
-- **Import and export** of all profiles, notes, colors and settings as a JSON file
+- **Import and export** of all profiles, notes, colors and settings as a JSON file, or a single profile that is added or merged into an existing one
 - **Light and dark theme**, defaulting to your system preference
 - **Factory reset** to wipe all profiles, notes and settings, with a confirmation step
 - **Local first**: everything is saved in your browser, no account needed, with a meter showing how much of the browser's storage is used
@@ -64,6 +64,7 @@ A profile is a separate globe with its own notes, colors and groups.
 - Click a profile to **switch** to it; the globe reloads with that profile's data
 - The pencil **renames** a profile (`Enter` saves, `Esc` cancels), the bin **deletes** it after a confirmation. The last remaining profile can't be deleted
 - Each profile shows its number of notes, groups and how much storage it takes. With more than one profile, the counter at the bottom of the screen starts with the active profile's name
+- The arrow **exports** a single profile to its own file. **Import profile** adds such a file as a new profile, or, if it came from a profile you already have, merges it into that profile: for every country and group the newer change wins. Other profiles are not touched
 
 ### Cloud sync
 

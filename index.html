@@ -355,10 +355,19 @@
             </div>
             <div class="list-controls">
                 <p class="hint">Each profile is its own globe with separate notes, colors and groups.</p>
-                <button class="button button-primary" id="profile-new">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                    New profile
-                </button>
+                <div class="profile-actions">
+                    <button class="button button-primary" id="profile-new">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                        New profile
+                    </button>
+                    <button class="button button-icon" id="profile-import" title="Add a profile from a file, or update it if it already exists">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
+                        </svg>
+                        Import profile
+                    </button>
+                    <input id="profile-import-file" type="file" accept="application/json,.json" hidden />
+                </div>
             </div>
             <ul class="list-items" id="profiles-items" aria-label="Profiles"></ul>
             <div class="profiles-storage">
